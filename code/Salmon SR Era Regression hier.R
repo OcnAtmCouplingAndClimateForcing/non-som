@@ -40,7 +40,7 @@ dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- TRUE
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
@@ -65,11 +65,8 @@ for(fit.species in species) {
   for(var in vars) {
 
 
-# Define Output Folders ============================================
-dir.output <- file.path(dir.output, paste0(fit.species,"-",var))
-dir.create(dir.output)
-
-
+# Define Output File Names ============================================
+file.name <- paste0(fit.species,"-",var)
 
 # Load/Compile Data ================================================
 # Stock-recruitment data
@@ -185,9 +182,9 @@ if(fit==TRUE) {
              seed=101,
              control = list(adapt_delta = 0.99))
   #Save Output
-  saveRDS(fit, file=file.path(dir.output,"stan.fit.rds"))
+  saveRDS(fit, file=file.path(dir.output, paste0(file.name,".rds")))
 }else {
-  stan.fit <- readRDS(file=file.path(dir.output,"stan.fit.rds"))
+  stan.fit <- readRDS(file=file.path(dir.output,paste0(file.name,".rds")))
 }
 
 # Plot Output ======================================================
