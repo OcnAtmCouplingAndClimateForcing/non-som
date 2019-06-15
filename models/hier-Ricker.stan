@@ -37,6 +37,9 @@ parameters {
   vector[S] ratio; 
   
   //Ricker Params
+  real ricker_mu_alpha;
+  real<lower=0> ricker_sigma_alpha;
+  
   real ricker_alpha[S]; //Note, could treat as RE by drawing from common Normal() where mean/var are estimates...
   real<lower=0> ricker_beta[S]; //No sense in structuring as RE, given scale issues. 
   //Variances
@@ -92,8 +95,12 @@ model {
   //Priors
   phi ~ normal(0,sqrt(10)); //uniform(-0.99,0.99); //Autoregressive term for errors
   
+  // Ricker alpha hyperparameters
+  ricker_mu_alpha ~ normal(0,5);
+  ricker_sigma_alpha ~ normal(0,5);
+  
   for(s in 1:S) { // Stocks
-    ricker_alpha[s] ~ normal(0,10);
+    ricker_alpha[s] ~ normal(ricker_mu_alpha,ricker_sigma_alpha);
     ricker_beta[s] ~ normal(0,0.001);
     sigma_resid[s] ~ normal(0,5);//cauchy(0,5);
     init_residual[s] ~ normal(0,sqrt(10));//normal(0,(sigma_oe[s]/(1-phi^2))); // normal(0,10); //Initial residual
