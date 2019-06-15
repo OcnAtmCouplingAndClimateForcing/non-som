@@ -176,7 +176,8 @@ if(fit==TRUE) {
                        ),
              chains=n.chains, iter=n.iter, thin=n.thin,
              cores=n.chains, verbose=FALSE,
-             seed=101)
+             seed=101,
+             control = list(adapt_delta = 0.99))
   #Save Output
   saveRDS(fit, file=file.path(dir.output,"stan.fit.rds"))
 }else {
