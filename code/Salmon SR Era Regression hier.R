@@ -48,7 +48,9 @@ n.iter <- 5e3
 n.thin <- 5
 
 # Select Species 
-fit.species <- c("Sockeye","Pink","Chum")[1]
+species <- c("Sockeye","Pink","Chum")
+fit.species <- species[1]
+
 
 # Whether to fit a model with PDO or NPGO 
 vars <- c("pdo1","pdo2a","pdo2b",
@@ -57,6 +59,10 @@ vars <- c("pdo1","pdo2a","pdo2b",
 
 var <- vars[1]
 
+# START LOOP =======================================================
+# Comment me out if you want to run a single species and variable combination!
+for(fit.species in species) {
+  for(var in vars) {
 
 
 # Define Output Folders ============================================
@@ -208,9 +214,9 @@ g2 <- list.exp_mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
 g2
 
 
-
-
-
+# END LOOP ========================================================
+  } #next var
+} #next species
 
 
 
