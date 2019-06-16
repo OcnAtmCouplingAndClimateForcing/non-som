@@ -182,7 +182,7 @@ if(fit==TRUE) {
              seed=101,
              control = list(adapt_delta = 0.99))
   #Save Output
-  saveRDS(fit, file=file.path(dir.output, paste0(file.name,".rds")))
+  saveRDS(stan.fit, file=file.path(dir.output, paste0(file.name,".rds")))
 }else {
   stan.fit <- readRDS(file=file.path(dir.output,paste0(file.name,".rds")))
 }
