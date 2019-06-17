@@ -28,7 +28,7 @@ library(ggthemes)
 library(tidybayes)
 library(cowplot)
 library(bayesplot)
-library(brms)
+# library(brms)
 
 # Define Workflow Paths ============================================
 # *Assumes you are working from the Sergent_Streamflow R project
@@ -40,11 +40,11 @@ dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- TRUE # Do we fit the model, or just load saved .rds outputs
+fit <- FALSE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 5e3
+n.iter <- 1e4
 n.thin <- 5
 
 # Select Species 
@@ -61,6 +61,13 @@ var <- vars[1]
 
 # START LOOP =======================================================
 # Comment me out if you want to run a single species and variable combination!
+
+# Output Objects
+out.waic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
+out.se_waic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
+out.looic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
+out.se_looic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
+
 for(fit.species in species) {
   for(var in vars) {
 
@@ -187,6 +194,17 @@ if(fit==TRUE) {
   stan.fit <- readRDS(file=file.path(dir.output,paste0(file.name,".rds")))
 }
 
+# Calculate WAIC for Model =========================================
+
+
+temp.waic <- waic(extract(stan.fit)$log_lik)
+out.waic[which(species==fit.species), which(vars==var)] <- temp.waic$waic
+out.se_waic[which(species==fit.species), which(vars==var)] <- temp.waic$se_waic
+
+temp.loo <- loo(extract(stan.fit)$log_lik)
+out.looic[which(species==fit.species), which(vars==var)] <- temp.loo$looic
+out.se_looic[which(species==fit.species), which(vars==var)] <- temp.loo$se_looic
+
 # Plot Output ======================================================
 # Someone can continue here.
 
@@ -217,7 +235,11 @@ g2
 
 
 
-
+# Save WAIC Looic =================================================
+write.csv(out.waic, file.path(dir.output,"waic.csv"))
+write.csv(out.se_waic, file.path(dir.output,"se_waic.csv"))
+write.csv(out.looic, file.path(dir.output,"looic.csv"))
+write.csv(out.se_looic, file.path(dir.output,"se_looic.csv"))
 
 
 
