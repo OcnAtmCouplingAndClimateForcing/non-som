@@ -11,6 +11,7 @@
 #
 #==================================================================================================
 #NOTES:
+#  Best covariates across species SEEM to be: pdo2a and npgo
 #
 #==================================================================================================
 library(tidyverse)
@@ -40,7 +41,7 @@ dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- FALSE # Do we fit the model, or just load saved .rds outputs
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
@@ -57,7 +58,7 @@ vars <- c("pdo1","pdo2a","pdo2b",
           "pdo3","npgo","npgo2a",
           "npgo2b","npgo3")
 
-var <- vars[1]
+var <- vars[2] #2 & 5 seem best. 
 
 # START LOOP =======================================================
 # Comment me out if you want to run a single species and variable combination!
@@ -174,6 +175,7 @@ for(p in 1:n.stocks) {
 # temp.regions <- regions[unique(region)]
 
 # Fit Stan Model ===================================================
+start.time <- date()
 #Fit the model
 if(fit==TRUE) {
   stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker.stan"),
@@ -193,7 +195,7 @@ if(fit==TRUE) {
 }else {
   stan.fit <- readRDS(file=file.path(dir.output,paste0(file.name,".rds")))
 }
-
+end.time <- date()
 # Calculate WAIC for Model =========================================
 
 
@@ -245,8 +247,13 @@ g2
 
 
 
-
-
+# Printing Section
+print(paste("Species:",fit.species, "Variable:", var))
+print(paste("START:", start.time))
+print(paste("END:", end.time))
+print(paste("n.chains:",n.chains))
+print(paste("n.iter:",n.iter))
+print(paste("n.thin:",n.thin))
 
 
 
