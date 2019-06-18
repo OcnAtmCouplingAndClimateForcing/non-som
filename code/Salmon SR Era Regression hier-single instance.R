@@ -176,6 +176,7 @@ for(p in 1:n.stocks) {
 
 # Fit Stan Model ===================================================
 start.time <- date()
+stan.fit <- NULL
 #Fit the model
 if(fit==TRUE) {
   stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker.stan"),

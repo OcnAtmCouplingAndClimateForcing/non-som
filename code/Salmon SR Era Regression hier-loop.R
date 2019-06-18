@@ -175,6 +175,7 @@ for(p in 1:n.stocks) {
 
 # Fit Stan Model ===================================================
 #Fit the model
+stan.fit <- NULL
 if(fit==TRUE) {
   stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker.stan"),
              model_name="Hierarchical-Breakpoint-Ricker",
