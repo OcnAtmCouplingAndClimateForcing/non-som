@@ -159,7 +159,7 @@ for(s in levels.syst) {
                    n_levels = max(as.numeric(temp$variable)),
                    x = temp$scale_x)
 
-  mod = stan(file="models/mod.stan", data=stan_data, chains=1, warmup=4000, iter=6000,thin=2,
+  mod = stan(file="models/mod.stan", data=stan_data, chains=3, warmup=4000, iter=6000,thin=2,
              pars = c("beta","mu_beta","ratio","mu_ratio","sigma_beta","sigma_ratio",
                "exp_mu_ratio","exp_ratio","pred"),
              control=list(adapt_delta=0.99, max_treedepth=20))
@@ -205,7 +205,7 @@ for(s in levels.syst) {
   dev.off()
 
   # Fit null model to look at autocorrelation between model with and without 2 slopes
-  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=1, warmup=4000, iter=6000,thin=2,
+  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=3, warmup=4000, iter=6000,thin=2,
               pars = c("beta","mu_beta","sigma_beta","pred"),
               control=list(adapt_delta=0.99, max_treedepth=20))
   pars0 = rstan::extract(mod0,permuted=TRUE)
@@ -315,7 +315,7 @@ for(s in levels.syst) {
   dev.off()
   
   # Fit null model to look at autocorrelation between model with and without 2 slopes
-  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=1, warmup=4000, iter=6000,thin=2,
+  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=3, warmup=4000, iter=6000,thin=2,
               pars = c("beta","mu_beta","sigma_beta","pred"),
               control=list(adapt_delta=0.99, max_treedepth=20))
   pars0 = rstan::extract(mod0,permuted=TRUE)
