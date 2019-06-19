@@ -13,6 +13,21 @@
 #NOTES:
 #  Best covariates across species SEEM to be: pdo2a and npgo
 #
+#TIMINGS:
+# [1] "Species: Sockeye Variable: pdo2a"
+# [1] "START: Mon Jun 17 10:59:15 2019"
+# [1] "END: Mon Jun 17 14:06:48 2019"
+# [1] "n.chains: 3"
+# [1] "n.iter: 50000"
+# [1] "n.thin: 10"
+
+# [1] "Species: Chum Variable: npgo"
+# [1] "START: Tue Jun 18 07:27:00 2019"
+# [1] "END: Tue Jun 18 09:17:17 2019"
+# [1] "n.chains: 3"
+# [1] "n.iter: 50000"
+# [1] "n.thin: 10"
+# # 
 #==================================================================================================
 library(tidyverse)
 library(zoo)
@@ -34,14 +49,15 @@ library(bayesplot)
 # Define Workflow Paths ============================================
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
-dir.output <- file.path(wd,"output")
+# dir.output <- file.path(wd,"output")
+dir.output <- file.path(wd,"output","CurryTesting")
 dir.figs <- file.path(wd,"plots")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- TRUE # Do we fit the model, or just load saved .rds outputs
+fit <- FALSE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
@@ -50,7 +66,7 @@ n.thin <- 10
 
 # Select Species 
 species <- c("Sockeye","Pink","Chum")
-fit.species <- species[1]
+fit.species <- species[3]
 
 
 # Whether to fit a model with PDO or NPGO 
@@ -58,7 +74,7 @@ vars <- c("pdo1","pdo2a","pdo2b",
           "pdo3","npgo","npgo2a",
           "npgo2b","npgo3")
 
-var <- vars[2] #2 & 5 seem best. 
+var <- vars[5] #2 & 5 seem best. 
 
 # START LOOP =======================================================
 # Comment me out if you want to run a single species and variable combination!
@@ -167,7 +183,7 @@ for(p in 1:n.stocks) {
   #Assign Covars and Eras ===============
   covar[p,1:N[p]] <- dat.temp$env.var
   era[p,1:N[p]] <- dat.temp$era
-
+  
 }#next p
 
 #Determine maximum length of covariates =====================
@@ -180,17 +196,17 @@ stan.fit <- NULL
 #Fit the model
 if(fit==TRUE) {
   stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker.stan"),
-             model_name="Hierarchical-Breakpoint-Ricker",
-             data=list("ln_rps"=ln_rps, "spawn"=spawn,
-                       "N"=N, "maxN"=maxN,
-                       "S"=S, "R"=R,
-                       "region"=region,
-                       "covar"=covar, "era"=era
-                       ),
-             chains=n.chains, iter=n.iter, thin=n.thin,
-             cores=n.chains, verbose=FALSE,
-             seed=101,
-             control = list(adapt_delta = 0.99))
+                   model_name="Hierarchical-Breakpoint-Ricker",
+                   data=list("ln_rps"=ln_rps, "spawn"=spawn,
+                             "N"=N, "maxN"=maxN,
+                             "S"=S, "R"=R,
+                             "region"=region,
+                             "covar"=covar, "era"=era
+                   ),
+                   chains=n.chains, iter=n.iter, thin=n.thin,
+                   cores=n.chains, verbose=FALSE,
+                   seed=101,
+                   control = list(adapt_delta = 0.99))
   #Save Output
   saveRDS(stan.fit, file=file.path(dir.output, paste0(file.name,".rds")))
 }else {
@@ -198,7 +214,10 @@ if(fit==TRUE) {
 }
 end.time <- date()
 # Calculate WAIC for Model =========================================
-
+par(mfrow=c(2,1), oma=c(0,0,0,0), mar=c(2,2,2,1))
+summ <- data.frame(summary(stan.fit)$summary)
+hist(summ$n_eff, col='blue', main="Effective Sample Size")
+hist(summ$Rhat, col='orange', main="Rhat")
 
 # temp.waic <- waic(extract(stan.fit)$log_lik)
 # out.waic[which(species==fit.species), which(vars==var)] <- temp.waic$waic
@@ -220,15 +239,15 @@ exp_mu_ratios <- exp(mu_ratios)
 list.exp_mu_ratios <- melt(exp_mu_ratios)
 
 g <- list.exp_mu_ratios %>% ggplot(aes(value, fill=variable)) +
-       scale_fill_colorblind() +
-       geom_density(alpha=0.5)
+  scale_fill_colorblind() +
+  geom_density(alpha=0.5)
 g
 
 g2 <- list.exp_mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
-        scale_fill_colorblind() +
-        geom_eye(alpha=0.5) +
-        coord_flip() +
-        theme(legend.position = 'none')
+  scale_fill_rgb() +
+  geom_eye(alpha=0.5) +
+  coord_flip(ylim=c(0,5)) +
+  theme(legend.position = 'none')
 g2
 
 
