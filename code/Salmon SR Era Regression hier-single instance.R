@@ -45,8 +45,8 @@ fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 1e4
-n.thin <- 5
+n.iter <- 5e4
+n.thin <- 10
 
 # Select Species 
 species <- c("Sockeye","Pink","Chum")
