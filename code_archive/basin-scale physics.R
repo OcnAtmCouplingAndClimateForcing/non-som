@@ -35,9 +35,10 @@ nc.slp <- nc_open("/Users/MikeLitzow 1/Documents/R/climate scripts/monthly.SLP.f
 raw <- ncvar_get(nc.slp, "TIME")  # seconds since 1-1-1970
 # h <- raw/(24*60*60)
 d <- dates(raw, origin = c(1,1,0001))
+m <- months(d)
 yr <- years(d)
-
-# this is a different 
+dec.yr <- as.numeric(as.character(yr)) + (as.numeric(m)-0.5)/12
+# and lat/long
 x <- ncvar_get(nc.slp, "LON53_101")
 y <- ncvar_get(nc.slp, "LAT45_65")
 SLP <- ncvar_get(nc.slp, "SLP", verbose = F)
@@ -54,6 +55,7 @@ lon <- rep(x, each = length(y))
 dimnames(SLP) <- list(as.character(d), paste("N", lat, "E", lon, sep=""))
 
 # load pdo
+download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
 names <- read.table("~pdo", skip=30, nrows=1, as.is = T)
 pdo <- read.table("~pdo", skip=31, nrows=119, fill=T, col.names = names)
 pdo$YEAR <- 1900:(1899+nrow(pdo)) # drop asterisks!
@@ -66,61 +68,7 @@ pdo <- pdo %>%
 npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "month", "value"))
 
 
-# now, AL sd
-# subset SLP to AL area...45-55 N, 192.5-207.5 E
-latAL <- lat >= 46.25 & lat <=56.25
-lonAL <- lon >= 186.25 & lon <=206
 
-SLP.AL <- SLP
-SLP.AL[,!latAL] <- NA
-SLP.AL[,!lonAL] <- NA
-
-# remove seasonal signal
-m <- months(d)
-yr <- years(d)
-
-f <- function(x) tapply(x, m, mean)
-mu <- apply(SLP.AL, 2, f)	# Compute monthly means for each time series (location)
-
-mu <- mu[rep(1:12, floor(length(d)/12)),] 
-xtra <- 12*((length(d)/12)-floor(length(d)/12))
-mu <- rbind(mu, mu[1:xtra,])
-
-SLP.ALanom <- SLP.AL - mu   # Compute matrix of anomalies - dropping year and month!
-
-# get average anomaly across the area
-SLP.ALanom <- rowMeans(SLP.ALanom, na.rm=T)
-
-# smooth with 11-m rolling mean
-SLP.sm <- rollmean(SLP.ALanom,11,fill=NA)
-
-# and get the rolling 21-yr (253-mo) sd
-SLP.sd <- rollapply(SLP.sm, 253, sd, fill=NA)
-
-dec.yr <- as.numeric(as.character(yr))+(as.numeric(m)-0.5)/12
-
-# put together time series plots
-plot.dat <- data.frame(dec.yr=dec.yr, year=as.numeric(as.character(yr)), month=as.numeric(m), AL.sd=SLP.sd, SLP.PDO.NS=NA, SLP.NPGO=NA)
-
-# and get full-field SD values by era to plot
-
-# recalculate anomalies for the entire era
-mu <- apply(SLP, 2, f)	# Compute monthly means for each time series (location)
-
-mu <- mu[rep(1:12, floor(length(d)/12)),] 
-xtra <- 12*((length(d)/12)-floor(length(d)/12))
-mu <- rbind(mu, mu[1:xtra,])
-
-SLPanom <- SLP - mu   # Compute matrix of anomalies - dropping year and month!
-
-ff <- function(x) rollmean(x,11,fill=NA)
-
-# smooth with 11-m rolling mean
-SLP.sm <- apply(SLPanom, 2, ff)
-
-SLPsd1 <- apply(SLPanom[yr<=1988,], 2, sd, na.rm=T)
-SLPsd2 <- apply(SLPanom[yr %in% 1989:2013,], 2, sd, na.rm=T)
-SLPsd.diff <- SLPsd2-SLPsd1
 
 ###
 # and SLP-PDO
@@ -157,56 +105,64 @@ SLPsd.diff <- SLPsd2-SLPsd1
 # npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "month", "value"))
 
 # smooth SLP with three month rolling mean
-f <- function(x) rollmean(x,3,fill=NA)
 
-SLPsm <- apply(SLP, 2, f)
+# limit SLP to NDJ
+SLP.NDJ <- SLP[m %in% c("Nov", "Dec", "Jan"),]
 
-rownames(SLPsm)
+yr <- as.numeric(as.character(yr))
+win.yr <- ifelse(m %in% c("Nov", "Dec"), yr+1, yr)
+win.yr <- win.yr[m %in% c("Nov", "Dec", "Jan")]
 
-# limit to 1950:2017
-SLPsm <- SLPsm[yr %in% 1950:2017,]
+# get NDJ means for each cell 
+rownames(SLP.NDJ) # 1949-2019 are complete!
 
-# limit PDO and NPGO to March 1950 - Feb 2018
-# also expanding to split out 1950-1988 and 1989-2013
-pdo[c(603,1418),]
-pdo[c(603,1068),]
-pdo[c(1069,1368),]
+ff <- function(x) tapply(x, win.yr, mean)
+SLP.NDJ <- apply(SLP.NDJ, 2, ff)
 
-pdoTS <- pdo$value[603:1418]
-pdoTS1 <- pdo$value[603:1068]
-pdoTS2 <- pdo$value[1069:1368]
+# limit pdo and npgo to FMA
+pdo <- pdo %>%
+  filter(month %in% c("FEB", "MAR", "APR"))
 
-npgo[c(3,818),]
-npgo[c(3,468),]
-npgo[c(469,768),]
+PDO.FMA <- tapply(pdo$value, pdo$YEAR, mean) # complete through 2018
 
-npgoTS <- npgo$value[3:818]
-npgoTS1 <- npgo$value[3:468]
-npgoTS2 <- npgo$value[469:768]
+npgo <- npgo %>%
+  filter(month %in% 2:4)
 
-# and two era time series
-rownames(SLPsm)[c(1,length(pdoTS1))]
-rownames(SLPsm)[c(length(pdoTS1),length(pdoTS1)+length(pdoTS2))]
-SLPsm1 <- SLPsm[1:length(pdoTS1),]
-SLPsm2 <- SLPsm[(1+length(pdoTS1)):(length(pdoTS1)+length(pdoTS2)),]
+NPGO.FMA <- tapply(npgo$value, npgo$Year, mean) # complete through 2018
+
+# separate SLP, PDO, and NPGO into era-specific chunks for regression maps
+
+SLP1 <- SLP.NDJ[rownames(SLP.NDJ) %in% 1950:1988,]
+SLP2 <- SLP.NDJ[rownames(SLP.NDJ) %in% 1989:2012,]
+
+PDO1 <- PDO.FMA[names(PDO.FMA) %in% 1950:1988]
+PDO2 <- PDO.FMA[names(PDO.FMA) %in% 1989:2012]
+
+NPGO1 <- NPGO.FMA[names(NPGO.FMA) %in% 1950:1988]
+NPGO2 <- NPGO.FMA[names(NPGO.FMA) %in% 1989:2012]
 
 # separate regressions in each era!
 pdo.regr1 <- pdo.regr2 <- npgo.regr1 <- npgo.regr2 <- NA
 
-for(i in 1:ncol(SLPsm)){
+for(i in 1:ncol(SLP1)){
   #  i <- 1
-  mod <- lm(SLPsm1[,i] ~ pdoTS1)
+  mod <- lm(SLP1[,i] ~ PDO1)
   pdo.regr1[i] <- summary(mod)$coef[2,1]
   
-  mod <- lm(SLPsm2[,i] ~ pdoTS2)
+  mod <- lm(SLP2[,i] ~ PDO2)
   pdo.regr2[i] <- summary(mod)$coef[2,1]
   
-  mod <- lm(SLPsm1[,i] ~ npgoTS1)
+  mod <- lm(SLP1[,i] ~ NPGO1)
   npgo.regr1[i] <- summary(mod)$coef[2,1] 
   
-  mod <- lm(SLPsm2[,i] ~ npgoTS2)
+  mod <- lm(SLP2[,i] ~ NPGO2)
   npgo.regr2[i] <- summary(mod)$coef[2,1] 
 }
+
+# calculate era differences for each
+pdo.diff <- pdo.regr2 - pdo.regr1
+npgo.diff <- npgo.regr2 - npgo.regr1
+diff.lim <- range(pdo.diff, npgo.diff)
 
 # # and plot
 # # set up color schemes
@@ -233,21 +189,22 @@ for(i in 1:ncol(SLPsm)){
 
 
 ###########################
-# get rolling regression coefficients for each square
+# get era regression coefficients for each square
 
 # define the squares
-xx1 <- c(183.5, 183.5, 204, 204, 183.5)
-yy1 <- c(46.5, 54, 54, 46.5, 46.5)
+xx1 <- c(186, 186, 201.5, 201.5, 186)
+yy1 <- c(51.5, 56.5, 56.5, 51.5, 51.5)
 
-xx2 <- c(196, 196, 216.5, 216.5, 196)
-yy2 <- c(39, 46.5, 46.5, 39, 39)
+xx2 <- c(219, 219, 231.5, 231.5, 219)
+yy2 <- c(39, 49, 49, 39, 39)
 
-xx3 <- c(194, 194, 199, 211, 216.5, 216.5, 194)
-yy3 <- c(51.5, 54, 56.5, 61.5, 61.5, 51.5, 51.5)
+xx3 <- c(183.5, 183.5, 204, 204, 183.5)
+yy3 <- c(46.5, 56.5, 56.5, 46.5, 46.5)
 
 
 PDOkeep1 <- PDOkeep2 <- NPGOkeep <- NA
-pdoSLP1 <- pdoSLP2 <- npgoSLP <- SLPsm
+pdoSLP1.era1 <- pdoSLP2.era1 <- npgoSLP.era1 <- SLP1
+pdoSLP1.era2 <- pdoSLP2.era2 <- npgoSLP.era2 <- SLP2
 
 for(i in 1:length(lat)){
   # i <- 1
@@ -256,77 +213,193 @@ for(i in 1:length(lat)){
   NPGOkeep[i] <- inpolygon(lon[i], lat[i], xx3, yy3)
 }
 
-pdoSLP1[,!PDOkeep1] <- NA
-pdoSLP2[,!PDOkeep2] <- NA
-npgoSLP[,!NPGOkeep] <- NA
+pdoSLP1.era1[,!PDOkeep1] <- NA
+pdoSLP1.era2[,!PDOkeep1] <- NA
+pdoSLP2.era1[,!PDOkeep2] <- NA
+pdoSLP2.era2[,!PDOkeep2] <- NA
+npgoSLP.era1[,!NPGOkeep] <- NA
+npgoSLP.era2[,!NPGOkeep] <- NA
 
+pdoSLP1.era1 <- rowMeans(pdoSLP1.era1, na.rm=T)
+pdoSLP1.era2 <- rowMeans(pdoSLP1.era2, na.rm=T)
 
+pdoSLP2.era1 <- rowMeans(pdoSLP2.era1, na.rm=T)
+pdoSLP2.era2 <- rowMeans(pdoSLP2.era2, na.rm=T)
 
-# now try 21-yr rolling regressions!
-pdo.regr1 <- pdo.regr2 <- npgo.regr <- NA
+npgoSLP.era1 <- rowMeans(npgoSLP.era1, na.rm=T)
+npgoSLP.era2 <- rowMeans(npgoSLP.era2, na.rm=T)
 
-# get monthly means of each
-pdoSLP1 <- rowMeans(pdoSLP1, na.rm=T)
-pdoSLP2 <- rowMeans(pdoSLP2, na.rm=T)
-npgoSLP <- rowMeans(npgoSLP, na.rm=T)
+plot(pdoSLP1.era1, PDO1, pch=19, col="red")
+points(pdoSLP1.era2, PDO2, pch=19, col="blue")
+abline(lsfit(pdoSLP1.era1, PDO1), col="red")
+abline(lsfit(pdoSLP1.era2, PDO2), col="blue")
 
-names(pdoSLP1)[1:(12*21)]
-# will use 253 month (21 yr + 1 mo) rolling windows
+plot(pdoSLP2.era1, PDO1, pch=19, col="red")
+points(pdoSLP2.era2, PDO2, pch=19, col="blue")
+abline(lsfit(pdoSLP2.era1, PDO1), col="red")
+abline(lsfit(pdoSLP2.era2, PDO2), col="blue")
 
-roll <- data.frame(dec.yr=as.numeric(as.character(years(names(pdoSLP1))))+(as.numeric(months(names(pdoSLP1)))-0.5)/12, pdo.regr1=NA, pdo.regr2=NA, npgo.regr=NA)
-
-# and the data for regressions
-dat <- data.frame(year=as.numeric(as.character(years(names(pdoSLP1))))+(as.numeric(months(names(pdoSLP1)))-0.5)/12,
-                  pdoSLP1=pdoSLP1, pdoSLP2=pdoSLP2, npgoSLP=npgoSLP, pdoTS=pdoTS, npgoTS=npgoTS, pdo.regr1=NA, pdo.regr2=NA, npgo.regr=NA) # so the correct lags are built in
-
-
-for(i in 127:(nrow(dat)-126)){
-  # i <- 127
-  temp <- dat[(i-126):(i+126),]
-  
-  mod <- lm(temp$pdoSLP1 ~ temp$pdoTS)
-  dat$pdo.regr1[i] <- summary(mod)$coef[2,1]
-  
-  mod <- lm(temp$pdoSLP2 ~ temp$pdoTS)
-  dat$pdo.regr2[i] <- summary(mod)$coef[2,1]
-  
-  mod <- lm(temp$npgoSLP ~ temp$npgoTS)
-  dat$npgo.regr[i] <- summary(mod)$coef[2,1]
-  
-}
-
-dat$pdoNS <- dat$pdo.regr1/dat$pdo.regr2
-  
-plot.dat$SLP.PDO.NS  <- dat$pdoNS[match(plot.dat$dec.yr, dat$year)]
-plot.dat$SLP.NPGO  <- dat$npgo.regr[match(plot.dat$dec.yr, dat$year)]
-
-plot.dat <- dat %>%
-  select(year, pdo.regr1, pdo.regr2, npgo.regr) %>%
-  gather(key, value, -year)
-
-ggplot(plot.dat, aes(year, value, color=key)) +
-  theme_linedraw() +
-  geom_line() +
-  ylim(c(-0.5, -2.8)) + 
-  xlim(c(1962,2005))
-
-dat$pdo.ratio <- ifelse(is.na(dat$pdo.regr1),NA, dat$pdo.regr1/dat$pdo.regr2)
-
-plot.dat <- dat %>%
-  select(year, pdo.ratio, npgo.regr) %>%
-  gather(key, value, -year)
-
-ggplot(plot.dat, aes(year, value)) +
-  theme_linedraw() +
-  geom_line() +
-  facet_wrap(~key, scales="free") + 
-  xlim(c(1962,2005))
+plot(npgoSLP.era1, NPGO1, pch=19, col="red", xlim=range(npgoSLP.era1, npgoSLP.era2), ylim=range(NPGO1, NPGO2))
+points(npgoSLP.era2, NPGO2, pch=19, col="blue")
+abline(lsfit(npgoSLP.era1, NPGO1), col="red")
+abline(lsfit(npgoSLP.era2, NPGO2), col="blue")
+# 
+# # make regression maps for each era and difference
+# 
+# # setup the layout
+# mt.cex <- 1.1
+# l.mar <- 3
+# l.cex <- 0.8
+# l.l <- 0.2
+# tc.l <- -0.2
+# 
+# cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+# new.col <- my.col <- tim.colors(64)
+# grays <- c("gray98", "gray98", "gray97", "gray97", "gray96", "gray96", "gray95", "gray95", "gray94", "gray94", "gray93",
+#            "gray93", "gray92", "gray92", "gray91", "gray91", "gray90", "gray90", "gray89", "gray89", "gray88", "gray88",
+#            "gray87", "gray87", "gray86", "gray86", "gray85", "gray85", "gray84", "gray84", "gray83", "gray83", "gray82")
+# 
+# 
+# my.col[1:33] <- grays
+# # my.col[22:43] <- c(grays[11:1], grays)
+# new.col[27:36] <- c(grays[5:1], grays[1:5])
+# 
+# # xlim <- c(min(dec.yr), max(dec.yr.t))
+# 
+# par(mar=c(1.25,1.25,1.25,1),  tcl=tc.l, mgp=c(1.5,0.3,0), las=1, mfrow=c(4,4), cex.axis=0.8, cex.lab=0.8, oma=c(0,2,2,0))
+# # now atmospheric forcing of PDO/NPGO
+# lim <- range(pdo.regr1, pdo.regr2, npgo.regr1, npgo.regr2)
+# diff.lim <- range(pdo.diff, npgo.diff)
+# # PDO first era
+# z <- pdo.regr1  # replace elements NOT corresponding to land with loadings!
+# z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+# #image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+# #           xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# 
+# contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+# map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("d", adj=0.05, line=-1.4, cex=1)
+# 
+# xx1 <- c(183.5, 183.5, 204, 204, 183.5)
+# yy1 <- c(46.5, 54, 54, 46.5, 46.5)
+# 
+# xx2 <- c(196, 196, 216.5, 216.5, 196)
+# yy2 <- c(39, 46.5, 46.5, 39, 39)
+# 
+# lines(xx1, yy1, lwd=1.5, col="magenta")
+# lines(xx2, yy2, lwd=1.5, col="magenta")
+# 
+# # PDO second era
+# z <- pdo.regr2  # replace elements NOT corresponding to land with loadings!
+# z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+# #image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+# #           xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# 
+# contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+# map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+# map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("e", adj=0.05, line=-1.4, cex=1)
+# 
+# lines(xx1, yy1, lwd=1.5, col="magenta")
+# lines(xx2, yy2, lwd=1.5, col="magenta")
+# 
+# par(mar=c(1.5,3,1.5,1))
+# 
+# plot(dat$year, dat$pdoNS, type="l", xlab="", ylab="North:South forcing ratio", xlim=xlim, col=cb[6])
+# abline(h=mean(dat$pdoNS, na.rm=T))
+# abline(v=1989, lty=2)
+# mtext("f", adj=0.05, line=-1.4, cex=1)
+# 
+# par(mar=c(1.25,1.25,1.25,1))
+# 
+# # npgo first era
+# z <- npgo.regr1  # replace elements NOT corresponding to land with loadings!
+# z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+# # image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+# #            xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# 
+# contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+# map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("g", adj=0.05, line=-1.4, cex=1)
+# 
+# xx3 <- c(194, 194, 199, 211, 216.5, 216.5, 194)
+# yy3 <- c(51.5, 54, 56.5, 61.5, 61.5, 51.5, 51.5)
+# 
+# lines(xx3, yy3, lwd=1.5, col="magenta")
+# 
+# # npgo second era
+# z <- npgo.regr2  # replace elements NOT corresponding to land with loadings!
+# z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+# # image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+# #            xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+# 
+# contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+# map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+# map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("h", adj=0.05, line=-1.4, cex=1)
+# 
+# dat$pdoNS <- dat$pdo.regr1/dat$pdo.regr2
+#   
+# plot.dat$SLP.PDO.NS  <- dat$pdoNS[match(plot.dat$dec.yr, dat$year)]
+# plot.dat$SLP.NPGO  <- dat$npgo.regr[match(plot.dat$dec.yr, dat$year)]
+# 
+# plot.dat <- dat %>%
+#   select(year, pdo.regr1, pdo.regr2, npgo.regr) %>%
+#   gather(key, value, -year)
+# 
+# ggplot(plot.dat, aes(year, value, color=key)) +
+#   theme_linedraw() +
+#   geom_line() +
+#   ylim(c(-0.5, -2.8)) + 
+#   xlim(c(1962,2005))
+# 
+# dat$pdo.ratio <- ifelse(is.na(dat$pdo.regr1),NA, dat$pdo.regr1/dat$pdo.regr2)
+# 
+# plot.dat <- dat %>%
+#   select(year, pdo.ratio, npgo.regr) %>%
+#   gather(key, value, -year)
+# 
+# ggplot(plot.dat, aes(year, value)) +
+#   theme_linedraw() +
+#   geom_line() +
+#   facet_wrap(~key, scales="free") + 
+#   xlim(c(1962,2005))
 
 
 
 #######
 # combined plot
-png("reduced basin scale combined plot.png", 8,6, units="in", res=300)
+png("slp.pdo.npgo.maps.png", 8,6, units="in", res=300)
 
 # setup the layout
 mt.cex <- 1.1
@@ -336,7 +409,7 @@ l.l <- 0.2
 tc.l <- -0.2
 
 cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-my.col <- tim.colors(64)
+new.col <- my.col <- tim.colors(64)
 grays <- c("gray98", "gray98", "gray97", "gray97", "gray96", "gray96", "gray95", "gray95", "gray94", "gray94", "gray93",
            "gray93", "gray92", "gray92", "gray91", "gray91", "gray90", "gray90", "gray89", "gray89", "gray88", "gray88",
            "gray87", "gray87", "gray86", "gray86", "gray85", "gray85", "gray84", "gray84", "gray83", "gray83", "gray82")
@@ -344,88 +417,24 @@ grays <- c("gray98", "gray98", "gray97", "gray97", "gray96", "gray96", "gray95",
 
 my.col[1:33] <- grays
 # my.col[22:43] <- c(grays[11:1], grays)
-# new.col[27:36] <- c(grays[5:1], grays[1:5])
+new.col[27:36] <- c(grays[5:1], grays[1:5])
 
-# xlim <- c(min(dec.yr), max(dec.yr.t))
+xlim <- c(160,250)
 
-par(mar=c(1.25,1.25,1.25,1),  tcl=tc.l, mgp=c(1.5,0.3,0), las=1, mfrow=c(4,4), cex.axis=0.8, cex.lab=0.8, oma=c(0,2,2,0))
-
-
-###
-# now AL SD
-
-lim <- range(SLPsd1, SLPsd2)
-
-xx <- c(186.25, 186.25, 206, 206, 186.25)
-yy <- c(46.25, 56.25, 56.25, 46.25, 46.25)
+par(mar=c(1.25,1.25,1.25,1),  tcl=tc.l, mgp=c(1.5,0.3,0), las=1, mfrow=c(2,3), cex.axis=0.8, cex.lab=0.8, oma=c(0,2,2,0))
 
 
-z <- SLPsd1   # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
-image.plot(x,y,z, col=my.col, xlab = "", ylab = "", zlim=lim, ylim=c(20,70), yaxt="n", xaxt="n",
-           legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-contour(x,y,z, add=T, col="white",vfont=c("sans serif", "bold"))
-map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
-map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,80),add=T, lwd=1)
-lines(xx,yy, lwd=2, col="magenta")
-mtext("a", adj=0.05, line=-1.4, cex=1)
 
-z <- SLPsd2   # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
-image.plot(x,y,z, col=my.col, xlab = "", ylab = "", yaxt="n", xaxt="n", zlim=lim, ylim=c(20,70), yaxt="n", xaxt="n", 
-           legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-contour(x,y,z, add=T, col="white",vfont=c("sans serif", "bold"))
-map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
-map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,80),add=T, lwd=1)
-lines(xx,yy, lwd=2, col="magenta")
-mtext("b", adj=0.05, line=-1.4, cex=1)
-
-z <- SLPsd.diff   
-lim <- range(z)
-z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
-image.plot(x,y,z, col=new.col, xlab = "", ylab = "", zlim=c(-lim[2], lim[2]), ylim=c(20,70), yaxt="n", xaxt="n",
-           legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-contour(x,y,z, add=T, col="white",vfont=c("sans serif", "bold"))
-map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
-map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
-map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,80),add=T, lwd=1)
-lines(xx,yy, lwd=2, col="magenta")
-mtext("c", adj=0.05, line=-1.4, cex=1)
-
-par(mar=c(1.5,3,1.5,1))
-
-plot(dec.yr, SLP.sd, type="l", xlab="", ylab="Standard dev. (Pa)", xlim=xlim, col=cb[6])
-abline(h=mean(SLP.sd, na.rm=T))
-abline(v=1989, lty=2)
-mtext("c", adj=0.05, line=-1.4, cex=1)
-
-par(mar=c(1.25,1.25,1.25,1))
-
-# now atmospheric forcing of PDO/NPGO
 lim <- range(pdo.regr1, pdo.regr2, npgo.regr1, npgo.regr2)
 # PDO first era
 z <- pdo.regr1  # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y.slp)))  # Convert vector to matrix and transpose for plotting
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
 #image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
 #           xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-image.plot(x.slp,y.slp,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68), xlim=xlim,
            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-contour(x.slp,y.slp,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
 map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
@@ -433,26 +442,19 @@ map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5,
 map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
-mtext("d", adj=0.05, line=-1.4, cex=1)
+#mtext("a", adj=0.05, line=-1.4, cex=1)
+mtext("a) SLP-PDO 1950-1988", adj=0)
 
-xx1 <- c(183.5, 183.5, 204, 204, 183.5)
-yy1 <- c(46.5, 54, 54, 46.5, 46.5)
-
-xx2 <- c(196, 196, 216.5, 216.5, 196)
-yy2 <- c(39, 46.5, 46.5, 39, 39)
-
-lines(xx1, yy1, lwd=1.5, col="magenta")
-lines(xx2, yy2, lwd=1.5, col="magenta")
 
 # PDO second era
 z <- pdo.regr2  # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y.slp)))  # Convert vector to matrix and transpose for plotting
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
 #image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
 #           xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-image.plot(x.slp,y.slp,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68), xlim=xlim,
            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-contour(x.slp,y.slp,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
 map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
@@ -460,29 +462,46 @@ map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5,
 map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
 map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
-mtext("e", adj=0.05, line=-1.4, cex=1)
+# mtext("b", adj=0.05, line=-1.4, cex=1)
+mtext("b) SLP-PDO 1989-2012", adj=0)
 
-lines(xx1, yy1, lwd=1.5, col="magenta")
-lines(xx2, yy2, lwd=1.5, col="magenta")
+# PDO diff
+z <- pdo.diff  # replace elements NOT corresponding to land with loadings!
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+#image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#           xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+image.plot(x,y,z, col=new.col, zlim=c(-diff.lim[2], diff.lim[2]), ylim=c(20,68), xlim=xlim,
+           xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-par(mar=c(1.5,3,1.5,1))
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3") 
+map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("c", adj=0.05, line=-1.4, cex=1)
+mtext("c) SLP-PDO: difference", adj=0)
 
-plot(dat$year, dat$pdoNS, type="l", xlab="", ylab="North:South forcing ratio", xlim=xlim, col=cb[6])
-abline(h=mean(dat$pdoNS, na.rm=T))
-abline(v=1989, lty=2)
-mtext("f", adj=0.05, line=-1.4, cex=1)
-
-par(mar=c(1.25,1.25,1.25,1))
+# xx1 <- c(186, 186, 201.5, 201.5, 186)
+# yy1 <- c(51.5, 56.5, 56.5, 51.5, 51.5)
+# 
+# xx2 <- c(219, 219, 231.5, 231.5, 219)
+# yy2 <- c(39, 49, 49, 39, 39)
+# # 
+# lines(xx1, yy1, lwd=1.5, col="magenta")
+# lines(xx2, yy2, lwd=1.5, col="magenta")
 
 # npgo first era
 z <- npgo.regr1  # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y.slp)))  # Convert vector to matrix and transpose for plotting
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
 # image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
 #            xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-image.plot(x.slp,y.slp,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68), xlim=xlim,
            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-contour(x.slp,y.slp,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
 map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
@@ -490,22 +509,17 @@ map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5,
 map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
-mtext("g", adj=0.05, line=-1.4, cex=1)
-
-xx3 <- c(194, 194, 199, 211, 216.5, 216.5, 194)
-yy3 <- c(51.5, 54, 56.5, 61.5, 61.5, 51.5, 51.5)
-
-lines(xx3, yy3, lwd=1.5, col="magenta")
-
+# mtext("d", adj=0.05, line=-1.4, cex=1)
+mtext("d) SLP-NPGO 1950-1988", adj=0)
 # npgo second era
 z <- npgo.regr2  # replace elements NOT corresponding to land with loadings!
-z <- t(matrix(z, length(y.slp)))  # Convert vector to matrix and transpose for plotting
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
 # image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
 #            xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
-image.plot(x.slp,y.slp,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68), xlim=xlim,
            xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-contour(x.slp,y.slp,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
 map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
@@ -513,12 +527,37 @@ map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5,
 map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
 map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
-mtext("h", adj=0.05, line=-1.4, cex=1)
+# mtext("e", adj=0.05, line=-1.4, cex=1)
+mtext("e) SLP-NPGO 1989-2012", adj=0)
 
-xx3 <- c(194, 194, 199, 211, 216.5, 216.5, 194)
-yy3 <- c(51.5, 54, 56.5, 61.5, 61.5, 51.5, 51.5)
+# npgo diff
+z <- npgo.diff # replace elements NOT corresponding to land with loadings!
+z <- t(matrix(z, length(y)))  # Convert vector to matrix and transpose for plotting
+# image.plot(x,y,z, col=new.col, zlim=c(lim[1], -lim[1]), ylim=c(20,68),
+#            xlab = "", ylab = "", yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
+image.plot(x,y,z, col=new.col, zlim=c(-diff.lim[2], diff.lim[2]), ylim=c(20,68), xlim=xlim,
+           xlab = "", ylab = "",yaxt="n", xaxt="n", legend.mar=l.mar, legend.line=l.l, axis.args=list(cex.axis=l.cex, tcl=tc.l, mgp=c(3,0.3,0)))
 
-lines(xx3, yy3, lwd=1.5, col="magenta")
+contour(x,y,z, add=T, col="grey",vfont=c("sans serif", "bold"))
+map('world2Hires', 'Canada', fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'usa',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'USSR',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'Japan',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'Mexico',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires', 'China',fill=T,xlim=c(130,250), ylim=c(20,70),add=T, lwd=0.5, col="darkgoldenrod3")
+map('world2Hires',fill=F, xlim=c(130,250), ylim=c(20,66),add=T, lwd=1)
+# mtext("f", adj=0.05, line=-1.4, cex=1)
+mtext("f) SLP-NPGO: difference", adj=0)
+# xx3 <- c(194, 194, 199, 211, 216.5, 216.5, 194)
+# yy3 <- c(51.5, 54, 56.5, 61.5, 61.5, 51.5, 51.5)
+# # 
+# xx3 <- c(183.5, 183.5, 204, 204, 183.5)
+# yy3 <- c(46.5, 56.5, 56.5, 46.5, 46.5)
+# # 
+# # 
+# lines(xx3, yy3, lwd=1.5, col="magenta")
+
+dev.off()
 
 par(mar=c(1.5,3,1.5,1))
 
