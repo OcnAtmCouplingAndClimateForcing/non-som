@@ -204,6 +204,23 @@ for(s in levels.syst) {
   print(g)
   dev.off()
 
+  # Fit null model to look at autocorrelation between model with and without 2 slopes
+  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=1, warmup=4000, iter=6000,thin=2,
+              pars = c("beta","mu_beta","sigma_beta","pred"),
+              control=list(adapt_delta=0.99, max_treedepth=20))
+  pars0 = rstan::extract(mod0,permuted=TRUE)
+  resid_df = data.frame("variable"=temp$variable, "year"=temp$year,
+                        "x"=temp$scale_x)
+  resid_df$pred = apply(pars$pred,2,mean) # predictions from 2slope model
+  resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
+  resid_df$resid = temp$value - resid_df$pred
+  resid_df$resid0 = temp$value - resid_df$pred0
+  resids = group_by(resid_df, variable) %>% 
+    arrange(year) %>% 
+    summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
+              acf1 = unlist(acf(resid0,plot=FALSE))[2])
+  resids$response = "PDO"
+  write.csv(resids,file=paste0("output/PDO_",s,"_resid",".csv"))
 }
 
 # order the systems north-south
@@ -296,6 +313,24 @@ for(s in levels.syst) {
     theme_linedraw()
   print(g)
   dev.off()
+  
+  # Fit null model to look at autocorrelation between model with and without 2 slopes
+  mod0 = stan(file="models/mod0.stan", data=stan_data, chains=1, warmup=4000, iter=6000,thin=2,
+              pars = c("beta","mu_beta","sigma_beta","pred"),
+              control=list(adapt_delta=0.99, max_treedepth=20))
+  pars0 = rstan::extract(mod0,permuted=TRUE)
+  resid_df = data.frame("variable"=temp$variable, "year"=temp$year,
+                        "x"=temp$scale_x)
+  resid_df$pred = apply(pars$pred,2,mean) # predictions from 2slope model
+  resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
+  resid_df$resid = temp$value - resid_df$pred
+  resid_df$resid0 = temp$value - resid_df$pred0
+  resids = group_by(resid_df, variable) %>% 
+    arrange(year) %>% 
+    summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
+              acf1 = unlist(acf(resid0,plot=FALSE))[2])
+  resids$response = "NPGO"
+  write.csv(resids,file=paste0("output/NPGO_",s,"_resid",".csv"))
 }
 
 # order the systems north-south
