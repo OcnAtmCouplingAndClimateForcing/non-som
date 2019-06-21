@@ -217,10 +217,22 @@ for(s in levels.syst) {
   write.csv(resids,file=paste0("output/PDO_",s,"_resid",".csv"))
 }
 
+# add a placeholder 
+placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
+model.data <- rbind(model.data, placeholder)
+
 # order the systems north-south
-model.data$order <- ifelse(model.data$system=="GOA fish & crustaceans", 1,
-                           ifelse(model.data$system=="Farallon seabirds", 2, 3))
+model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
+                           ifelse(model.data$system=="Gulf of Alaska", 2, 
+                                  ifelse(model.data$system=="Northern California Current", 3, 
+                                         ifelse(model.data$system=="Central California Current", 4, 5))))
+
 model.data$system <- reorder(model.data$system, model.data$order)
+
+pdo.biol.data <- model.data
+
+# save for future reference
+write.csv(pdo.biol.data, "models/pdo_biology_model_data.csv")
 
 cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
@@ -318,12 +330,22 @@ for(s in levels.syst) {
   write.csv(resids,file=paste0("output/NPGO_",s,"_resid",".csv"))
 }
 
+# add a placeholder 
+placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
+model.data <- rbind(model.data, placeholder)
+
 # order the systems north-south
-model.data$order <- ifelse(model.data$system=="GOA fish & crustaceans", 1,
-                           ifelse(model.data$system=="Farallon seabirds", 2, 3))
+model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
+                           ifelse(model.data$system=="Gulf of Alaska", 2, 
+                                  ifelse(model.data$system=="Northern California Current", 3, 
+                                         ifelse(model.data$system=="Central California Current", 4, 5))))
+
 model.data$system <- reorder(model.data$system, model.data$order)
 
-npgo.data <- model.data
+npgo.biol.data <- model.data
+
+# save for future reference
+write.csv(npgo.biol.data, "models/npgo_biology_model_data.csv")
 
 npgo.plot <- ggplot(npgo.data, aes(ratio/100)) +
   theme_linedraw() +
