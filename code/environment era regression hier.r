@@ -58,7 +58,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m1 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m1$system <- "EBS"
+m1$system <- "Bering Sea"
 
 ####
 
@@ -77,7 +77,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m2 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m2$system <- "GOA"
+m2$system <- "Gulf of Alaska"
 
 #########
 
@@ -95,7 +95,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m3 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m3$system <- "Central CCE"
+m3$system <- "Central California Current"
 
 ###################
 
@@ -113,7 +113,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m4 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m4$system <- "Southern CCE"
+m4$system <- "Southern California Current"
 
 ###########################
 
@@ -131,7 +131,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m5 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m5$system <- "Northern CCE"
+m5$system <- "Northern California Current"
 
 ##############
 
@@ -356,15 +356,44 @@ write.csv(npgo.env.data, "models/npgo_environment_model_data.csv")
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
 q.95 <- function(x) { return(quantile(x, probs=c(0.025,0.975))) }
 
-head(npgo.data)
-head(pdo.data)
+head(npgo.env.data)
+head(pdo.env.data)
 
 # Combine dataframes
-npgo.data$var <- "NPGO"
-pdo.data$var <- "PDO"
-all.data <- rbind(pdo.data, npgo.data)
+npgo.env.data$var <- "NPGO"
+pdo.env.data$var <- "PDO"
+all.data <- rbind(pdo.env.data, npgo.env.data)
 
 # colorblind palette 
+all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
+all.data$var <- reorder(all.data$var, all.data$var.order)
+all.data$log.ratio <- log(all.data$ratio/100, 10)
+
+# colorblind...
+cb <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
+  theme_linedraw() +
+  scale_fill_manual(values=cb[c(6,3,4,2,8)], 
+                    labels=c("Bering Sea", "Gulf of Alaska", 
+                             "Northern Cal. Curr.", "Central Cal. Curr.", "Southern Cal. Curr.")) +
+  # scale_fill_colorblind() +
+  # scale_fill_tableau() +
+  # scale_fill_brewer(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+  # geom_eye() +
+  
+  geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
+  stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
+  stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
+  stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
+  facet_wrap(~var, ncol=1) +
+  ylab("Log ratio: Era 1 slope / Era 2 slope") +
+  theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
+        legend.title = element_blank(), legend.position = c(0.15,0.15)) +
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c()) 
+
+env.plt
 
 
 cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
