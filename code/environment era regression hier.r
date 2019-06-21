@@ -234,14 +234,17 @@ for(s in levels.syst) {
 }
 
 # order the systems north-south
-# order the systems north-south
-model.data$order <- match(model.data$system,
-  c("EBS","GOA","Northern CCE","Central CCE","Central CCE"))
+model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
+                           ifelse(model.data$system=="Gulf of Alaska", 2, 
+                                  ifelse(model.data$system=="Northern California Current", 3, 
+                                         ifelse(model.data$system=="Central California Current", 4, 5))))
+
 model.data$system <- reorder(model.data$system, model.data$order)
 
-cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+pdo.env.data <- model.data
 
-pdo.data <- model.data
+# save for future reference
+write.csv(pdo.env.data, "models/pdo_environment_model_data.csv")
 
 pdo.plot <- ggplot(pdo.data, aes(ratio/100)) + # just removing % for now
   theme_linedraw() +
@@ -344,11 +347,17 @@ for(s in levels.syst) {
 }
 
 # order the systems north-south
-model.data$order <- match(model.data$system,
-  c("EBS","GOA","Northern CCE","Central CCE","Central CCE"))
+model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
+                           ifelse(model.data$system=="Gulf of Alaska", 2, 
+                                  ifelse(model.data$system=="Northern California Current", 3, 
+                                         ifelse(model.data$system=="Central California Current", 4, 5))))
+
 model.data$system <- reorder(model.data$system, model.data$order)
 
-npgo.data <- model.data
+npgo.env.data <- model.data
+
+# save for future reference
+write.csv(npgo.env.data, "models/npgo_environment_model_data.csv")
 
 npgo.plot <- ggplot(npgo.data, aes(ratio/100)) +
   theme_linedraw() +
@@ -374,6 +383,9 @@ head(pdo.data)
 npgo.data$var <- "NPGO"
 pdo.data$var <- "PDO"
 all.data <- rbind(pdo.data, npgo.data)
+
+# colorblind palette 
+
 
 cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
   theme_linedraw() +
