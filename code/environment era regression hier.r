@@ -246,14 +246,6 @@ pdo.env.data <- model.data
 # save for future reference
 write.csv(pdo.env.data, "models/pdo_environment_model_data.csv")
 
-pdo.plot <- ggplot(pdo.data, aes(ratio/100)) + # just removing % for now
-  theme_linedraw() +
-  geom_density(fill=cb[3]) + xlab("Avg ratio: Era 1 slope / Era 2 slope") +
-  facet_wrap(~system, ncol=1) +
-  xlim(c(0,2)) +
-  geom_vline(xintercept = 1)+
-  ggtitle("a) PDO")
-
 #################
 ## and the same thing for npgo
 model.data <- data.frame()
@@ -358,18 +350,6 @@ npgo.env.data <- model.data
 
 # save for future reference
 write.csv(npgo.env.data, "models/npgo_environment_model_data.csv")
-
-npgo.plot <- ggplot(npgo.data, aes(ratio/100)) +
-  theme_linedraw() +
-  geom_density(fill=cb[3]) + xlab("Avg ratio: Era 1 slope / Era 2 slope") +
-  facet_wrap(~system, ncol=1) +
-  geom_vline(xintercept=1) +
-  xlim(c(0,4.5)) +
-  ggtitle("b) NPGO")
-
-png("env regression change pdo-npgo slope.png", 7, 9, units="in", res=300)
-ggarrange(pdo.plot, npgo.plot, ncol=2)
-dev.off()
 
 # Caterpillar Plot ===============================
 # Helper Functions
