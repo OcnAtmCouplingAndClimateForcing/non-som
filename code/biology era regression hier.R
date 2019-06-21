@@ -40,7 +40,7 @@ npgo2 <- rollapply(win.npgo, 2, mean, align="right", fill=NA)
 pdo2 <- rollapply(win.pdo, 2, mean, align="right", fill=NA)
 names(pdo2) <- 1900:2019
 
-# load three "non-salmon" data sets: GOA crustaceans/fish, Farallon seabirds, CalCOFI ichthyo
+# load four "non-salmon" data sets: EBS groundfish recruitment, GOA crustaceans/fish, Farallon seabirds, CalCOFI ichthyo
 dat <- read.csv("data/farallon.sbrd.biol.csv", row.names = 1)
 # add era term
 dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
@@ -94,9 +94,38 @@ m3 = dplyr::group_by(melted, variable) %>%
 m3$system <- "GOA fish & crustaceans"
 
 #######
+dat <- read.csv("data/ebs.biol.data.csv")
+dat[,2:5] <- sqrt(dat[,2:5])
+
+# examine distributions
+look <- dat %>%
+  gather(key, value, -year)
+
+ggplot(look, aes(value)) +
+  geom_histogram() +
+  facet_wrap(~key, scales="free")
+
+dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
+
+# and pdo/npgo
+dat$pdo <- win.pdo[match(dat$year, names(win.pdo))]
+dat$npgo <- win.npgo[match(dat$year, names(win.npgo))]
+
+# reshape with year, era, and pdo and npgo as the grouping variables
+melted <- melt(dat, id.vars = c("year","pdo","era","npgo"))
+melted$variable_era = paste0(melted$era,melted$variable)
+melted$value <- as.numeric(melted$value)
+
+# standardize all the time series by variable -- so slopes are on same scale
+m4 = dplyr::group_by(melted, variable) %>%
+  mutate(scale_x = scale(value))
+m4$system <- "Bering Sea"
+
+
+#######
 # combine
 
-melted <- rbind(m1, m2, m3)
+melted <- rbind(m1, m2, m3, m4)
 melted$year <- as.numeric(melted$year)
 melted$variable <- as.factor(melted$variable)
 melted$variable_era <- as.factor(melted$variable_era)
