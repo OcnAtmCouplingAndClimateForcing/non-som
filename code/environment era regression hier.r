@@ -27,9 +27,19 @@ npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "m
 
 # calculate NDJFM means for each index
 pdo$win.yr <- ifelse(pdo$month %in% c("NOV", "DEC"), pdo$YEAR+1, pdo$YEAR)
+
+# limit to winter months only
+pdo <- pdo %>%
+  filter(month %in% c("NOV", "DEC", "JAN", "FEB", "MAR"))
+
 win.pdo <- tapply(pdo$value, pdo$win.yr, mean)
 
 npgo$win.yr <- ifelse(npgo$month %in% 11:12, npgo$Year+1, npgo$Year)
+
+# limit to winter months only
+npgo <- npgo %>%
+  filter(month %in% c(11,12,1:3))
+
 win.npgo <- tapply(npgo$value, npgo$win.yr, mean)
 
 # there are five regions that we're looking at: CalCOFI/southern CCE, Farallon/central CCE, northern CCE, GOA, and EBS
