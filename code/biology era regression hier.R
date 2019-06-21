@@ -14,7 +14,6 @@ library(tidybayes)
 library(cowplot)
 library(bayesplot)
 
-# load pdo/npgo
 # download PDO / NPGO and process
 download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
 names <- read.table("~pdo", skip=30, nrows=1, as.is = T)
@@ -30,9 +29,19 @@ npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "m
 
 # calculate NDJFM means for each index
 pdo$win.yr <- ifelse(pdo$month %in% c("NOV", "DEC"), pdo$YEAR+1, pdo$YEAR)
+
+# limit to winter months only
+pdo <- pdo %>%
+  filter(month %in% c("NOV", "DEC", "JAN", "FEB", "MAR"))
+
 win.pdo <- tapply(pdo$value, pdo$win.yr, mean)
 
 npgo$win.yr <- ifelse(npgo$month %in% 11:12, npgo$Year+1, npgo$Year)
+
+# limit to winter months only
+npgo <- npgo %>%
+  filter(month %in% c(11,12,1:3))
+
 win.npgo <- tapply(npgo$value, npgo$win.yr, mean)
 
 # and smoothed (2yr) values of each
@@ -398,6 +407,7 @@ biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, f
 
 
 biol.plt
+
 cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
              theme_linedraw() +
              # scale_fill_colorblind() +
