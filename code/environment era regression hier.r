@@ -177,7 +177,7 @@ for(s in levels.syst) {
   pars = rstan::extract(mod,permuted=TRUE)
 
   model.data = rbind(model.data,
-                     data.frame(s,
+                     data.frame(system=s,
                        ratio=100*exp(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
@@ -430,6 +430,10 @@ all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   coord_flip(ylim=c(-1.5,1.2)) 
 
 all.plt
+
+ggsave("plots/combined biology-environment PDO-NPGO.png", plot=all.plt,
+       height=7, width=7, units="in", dpi=300)
+
 cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
   theme_linedraw() +
   # scale_fill_colorblind() +
