@@ -177,7 +177,7 @@ for(s in levels.syst) {
   pars = rstan::extract(mod,permuted=TRUE)
 
   model.data = rbind(model.data,
-                     data.frame(system=unique(melted$system)[s],
+                     data.frame(s,
                        ratio=100*exp(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
