@@ -402,7 +402,6 @@ biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, f
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
   coord_flip(ylim=c()) 
 
-
 biol.plt
 
 cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
