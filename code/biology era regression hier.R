@@ -65,7 +65,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m1 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m1$system <- "Farallon seabirds"
+m1$system <- "Central California Current"
 
 ####
 # CalCOFI
@@ -91,7 +91,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m2 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m2$system <- "CalCOFI ichthyoplankton"
+m2$system <- "Southern California Current"
 
 #########
 
@@ -118,7 +118,7 @@ melted$variable_era = paste0(melted$era,melted$variable)
 # standardize all the time series by variable -- so slopes are on same scale
 m3 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
-m3$system <- "GOA fish & crustaceans"
+m3$system <- "Gulf of Alaska"
 
 #######
 dat <- read.csv("data/ebs.biol.data.csv")
@@ -261,9 +261,6 @@ pdo.biol.data <- model.data
 # save for future reference
 write.csv(pdo.biol.data, "models/pdo_biology_model_data.csv")
 
-
-pdo.data <- model.data
-
 #################
 ## and the same thing for npgo
 model.data <- data.frame()
@@ -370,13 +367,13 @@ write.csv(npgo.biol.data, "models/npgo_biology_model_data.csv")
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
 q.95 <- function(x) { return(quantile(x, probs=c(0.025,0.975))) }
 
-head(npgo.data)
-head(pdo.data)
+head(npgo.biol.data)
+head(pdo.biol.data)
 
 # Combine dataframes
-npgo.data$var <- "NPGO"
-pdo.data$var <- "PDO"
-all.data <- rbind(pdo.data, npgo.data)
+npgo.biol.data$var <- "NPGO"
+pdo.biol.data$var <- "PDO"
+all.data <- rbind(pdo.biol.data, npgo.biol.data)
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
 all.data$log.ratio <- log(all.data$ratio/100, 10)
