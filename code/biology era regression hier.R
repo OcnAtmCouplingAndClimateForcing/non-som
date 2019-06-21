@@ -236,22 +236,22 @@ for(s in levels.syst) {
   resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
   resid_df$resid = temp$value - resid_df$pred
   resid_df$resid0 = temp$value - resid_df$pred0
-  resids = group_by(resid_df, variable) %>% 
-    arrange(year) %>% 
+  resids = group_by(resid_df, variable) %>%
+    arrange(year) %>%
     summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
               acf1 = unlist(acf(resid0,plot=FALSE))[2])
   resids$response = "PDO"
   write.csv(resids,file=paste0("output/PDO_",s,"_resid",".csv"))
 }
 
-# add a placeholder 
+# add a placeholder
 placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
 model.data <- rbind(model.data, placeholder)
 
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
-                           ifelse(model.data$system=="Gulf of Alaska", 2, 
-                                  ifelse(model.data$system=="Northern California Current", 3, 
+                           ifelse(model.data$system=="Gulf of Alaska", 2,
+                                  ifelse(model.data$system=="Northern California Current", 3,
                                          ifelse(model.data$system=="Central California Current", 4, 5))))
 
 model.data$system <- reorder(model.data$system, model.data$order)
@@ -325,7 +325,7 @@ for(s in levels.syst) {
     theme_linedraw()
   print(g)
   dev.off()
-  
+
   # Fit null model to look at autocorrelation between model with and without 2 slopes
   mod0 = stan(file="models/mod0.stan", data=stan_data, chains=3, warmup=4000, iter=6000,thin=2,
               pars = c("beta","mu_beta","sigma_beta","pred"),
@@ -337,22 +337,22 @@ for(s in levels.syst) {
   resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
   resid_df$resid = temp$value - resid_df$pred
   resid_df$resid0 = temp$value - resid_df$pred0
-  resids = group_by(resid_df, variable) %>% 
-    arrange(year) %>% 
+  resids = group_by(resid_df, variable) %>%
+    arrange(year) %>%
     summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
               acf1 = unlist(acf(resid0,plot=FALSE))[2])
   resids$response = "NPGO"
   write.csv(resids,file=paste0("output/NPGO_",s,"_resid",".csv"))
 }
 
-# add a placeholder 
+# add a placeholder
 placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
 model.data <- rbind(model.data, placeholder)
 
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
-                           ifelse(model.data$system=="Gulf of Alaska", 2, 
-                                  ifelse(model.data$system=="Northern California Current", 3, 
+                           ifelse(model.data$system=="Gulf of Alaska", 2,
+                                  ifelse(model.data$system=="Northern California Current", 3,
                                          ifelse(model.data$system=="Central California Current", 4, 5))))
 
 model.data$system <- reorder(model.data$system, model.data$order)
@@ -383,14 +383,14 @@ cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E
 
 biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
   theme_linedraw() +
-  scale_fill_manual(values=cb[c(6,3,4,2,8)], 
-                    labels=c("Bering Sea", "Gulf of Alaska", 
+  scale_fill_manual(values=cb[c(6,3,4,2,8)],
+                    labels=c("Bering Sea", "Gulf of Alaska",
                              "Northern Cal. Curr.", "Central Cal. Curr.", "Southern Cal. Curr.")) +
   # scale_fill_colorblind() +
   # scale_fill_tableau() +
   # scale_fill_brewer(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
   # geom_eye() +
-  
+
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
   stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
@@ -400,7 +400,7 @@ biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, f
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank(), legend.position = c(0.15,0.15)) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c()) 
+  coord_flip(ylim=c())
 
 biol.plt
 
