@@ -50,7 +50,8 @@ names(win.npgo) <- 1950:2019
 win.pdo <- rollapply(win.pdo, 2, mean, align="right", fill=NA)
 names(win.pdo) <- 1900:2019
 
-# load four "non-salmon" data sets: EBS groundfish recruitment, GOA crustaceans/fish, Farallon seabirds, CalCOFI ichthyo
+# load five "non-salmon" data sets: EBS groundfish recruitment, GOA crustaceans/fish,Farallon seabirds, CalCOFI ichthyo,
+# NCC oyster condition
 dat <- read.csv("data/farallon.sbrd.biol.csv", row.names = 1)
 # add era term
 dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
@@ -148,11 +149,33 @@ m4 = dplyr::group_by(melted, variable) %>%
   mutate(scale_x = scale(value))
 m4$system <- "Bering Sea"
 
+#######
+dat <- read.csv("data/ncc.biol.dat.csv")
+dat[,2:5] <- sqrt(dat[,2:5])
+
+# examine distributions (only one variable at this point!)
+ggplot(dat, aes(value)) +
+  geom_histogram() 
+
+dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
+
+# and pdo/npgo
+dat$pdo <- win.pdo[match(dat$year, names(win.pdo))]
+dat$npgo <- win.npgo[match(dat$year, names(win.npgo))]
+
+melted <- dat
+melted$variable_era = paste0(melted$era,melted$variable)
+melted$value <- as.numeric(melted$value)
+
+# standardize all the time series by variable -- so slopes are on same scale
+m5 = dplyr::group_by(melted, variable) %>%
+  mutate(scale_x = scale(value))
+m5$system <- "Northern California Current"
 
 #######
 # combine
 
-melted <- rbind(m1, m2, m3, m4)
+melted <- rbind(m1, m2, m3, m4, m5)
 melted$year <- as.numeric(melted$year)
 melted$variable <- as.factor(melted$variable)
 melted$variable_era <- as.factor(melted$variable_era)
@@ -244,9 +267,6 @@ for(s in levels.syst) {
   write.csv(resids,file=paste0("output/PDO_",s,"_resid",".csv"))
 }
 
-# add a placeholder
-placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
-model.data <- rbind(model.data, placeholder)
 
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
