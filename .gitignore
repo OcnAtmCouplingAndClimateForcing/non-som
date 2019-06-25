@@ -9,4 +9,4 @@
 *.DS_Store
 
 output/*.rds
-/CurryTesting
+output/CurryTesting
