@@ -58,7 +58,7 @@ vars <- c("pdo1","pdo2a","pdo2b",
           "pdo3","npgo","npgo2a",
           "npgo2b","npgo3")
 
-var <- vars[2] #2 & 5 seem best. 
+var <- vars[6] #MIKE decided pdo2a and npgo2a 
 
 # START LOOP =======================================================
 # Comment me out if you want to run a single species and variable combination!
