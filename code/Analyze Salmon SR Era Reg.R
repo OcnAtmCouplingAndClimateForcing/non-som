@@ -39,7 +39,7 @@ dir.mods <- file.path(wd, "models")
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-read <- FALSE #Whether to read in all model files
+read <- TRUE #Whether to read in all model files
 
 
 # MCMC Parameters
@@ -143,7 +143,7 @@ write.csv(list.sigma.ratio, file=file.path(wd,"output","Salmon","list.sigma.rati
 # Explore Models with Shiny Stan =======================================
 shiny.fit <- readRDS(file=file.path(dir.output, paste0("Chum-npgo2a.rds")))
 
-launch_shinystan(shiny.fit) #Required internet
+# launch_shinystan(shiny.fit) #Required internet
 # deploy_shinystan(as.shinystan(shiny.fit))
   
 # Plot: rhat ===========================================================
