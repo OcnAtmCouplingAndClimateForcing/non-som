@@ -57,12 +57,12 @@ dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- FALSE # Do we fit the model, or just load saved .rds outputs
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 5e4
-n.thin <- 10
+n.iter <- 5e3#5e4
+n.thin <- 5#10
 
 # Select Species 
 species <- c("Sockeye","Pink","Chum")
@@ -74,7 +74,7 @@ vars <- c("pdo1","pdo2a","pdo2b",
           "pdo3","npgo","npgo2a",
           "npgo2b","npgo3")
 
-var <- vars[5] #MIKE decided pdo2a and npgo2a 
+var <- vars[6] #MIKE decided (2) pdo2a and (6) npgo2a 
 
 # START LOOP =======================================================
 # Comment me out if you want to run a single species and variable combination!
