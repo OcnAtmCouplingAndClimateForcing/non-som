@@ -51,7 +51,7 @@ win.pdo <- rollapply(win.pdo, 2, mean, align="right", fill=NA)
 names(win.pdo) <- 1900:2019
 
 # load five "non-salmon" data sets: EBS groundfish recruitment, GOA crustaceans/fish,Farallon seabirds, CalCOFI ichthyo,
-# NCC oyster condition
+# CCC seabirds
 dat <- read.csv("data/farallon.sbrd.biol.csv", row.names = 1)
 # add era term
 dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
@@ -106,6 +106,12 @@ look <- dat %>%
 ggplot(look, aes(value)) +
   geom_histogram() +
   facet_wrap(~key, scales="free")
+
+# # add salmon data!!
+# salmon <- read.csv("data/salmon run dat.csv", row.names = 1) 
+
+goa.salm <- salmon %>%
+  filter()
 
 dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
 
@@ -281,6 +287,8 @@ pdo.biol.data <- model.data
 # save for future reference
 write.csv(pdo.biol.data, "models/pdo_biology_model_data.csv")
 
+pdo.biol.data <- read.csv("models/pdo_biology_model_data.csv", row.names=1)
+
 #################
 ## and the same thing for npgo
 model.data <- data.frame()
@@ -365,10 +373,6 @@ for(s in levels.syst) {
   write.csv(resids,file=paste0("output/NPGO_",s,"_resid",".csv"))
 }
 
-# add a placeholder
-placeholder <- data.frame(system="Northern California Current", ratio=rnorm(500, mean=100,sd=20))
-model.data <- rbind(model.data, placeholder)
-
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
                            ifelse(model.data$system=="Gulf of Alaska", 2,
@@ -382,6 +386,7 @@ npgo.biol.data <- model.data
 # save for future reference
 write.csv(npgo.biol.data, "models/npgo_biology_model_data.csv")
 
+npgo.biol.data <- read.csv("models/npgo_biology_model_data.csv", row.names=1)
 # Caterpillar Plot ===============================
 # Helper Functions
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
@@ -393,10 +398,34 @@ head(pdo.biol.data)
 # Combine dataframes
 npgo.biol.data$var <- "NPGO"
 pdo.biol.data$var <- "PDO"
+
+# now add in salmon results
+salmon <- read.csv("output/Salmon/list.mu.ratio.csv", row.names=1)
+
+unique(salmon$region)
+
+salmon$region <- as.factor(ifelse(salmon$region=="EBS", "Bering Sea",
+                        ifelse(salmon$region=="GOA", "Gulf of Alaska", "Northern California Current")))
+
+salmon$var <- as.factor(ifelse(salmon$var=="pdo2a", "PDO", "NPGO"))
+
+salmon$order <- as.factor(ifelse(salmon$region=="Bering Sea", 1, 
+                                 ifelse(salmon$region=="Gulf of Alaska", 2, 3)))
+
+salmon <- salmon %>%
+  select(region, value, order, var)
+
+names(salmon)[c(1,2)] <- c("system", "ratio")
+salmon$var.order <- ifelse(salmon$var=="PDO", 1, 2)
+salmon$log.ratio <- log(exp(salmon$ratio), 10)
+
+# all.data <- rbind(pdo.biol.data, npgo.biol.data, salmon)
 all.data <- rbind(pdo.biol.data, npgo.biol.data)
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
 all.data$log.ratio <- log(all.data$ratio/100, 10)
+
+all.data <- rbind(all.data, salmon)
 
 # colorblind...
 cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
