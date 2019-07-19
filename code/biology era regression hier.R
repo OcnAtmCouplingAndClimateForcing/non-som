@@ -107,12 +107,6 @@ ggplot(look, aes(value)) +
   geom_histogram() +
   facet_wrap(~key, scales="free")
 
-# # add salmon data!!
-# salmon <- read.csv("data/salmon run dat.csv", row.names = 1) 
-
-goa.salm <- salmon %>%
-  filter()
-
 dat$era <- as.factor(ifelse(dat$year <= 1988, 1, 2))
 
 # and pdo/npgo
