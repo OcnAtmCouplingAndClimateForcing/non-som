@@ -425,6 +425,10 @@ all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
 all.data$log.ratio <- log(all.data$ratio/100, 10)
 
+<<<<<<< HEAD
+=======
+all.data <- rbind(all.data, salmon)
+>>>>>>> 6d20bffe88dfb44120cfc177ebb2cdc921bcad45
 
 # colorblind...
 cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
