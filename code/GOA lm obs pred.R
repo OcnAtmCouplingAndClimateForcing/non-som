@@ -84,6 +84,7 @@ levels.syst <- as.factor(unique(melted$system))
 levels.vars <- as.factor(unique(melted$variable)) 
 
 model.preds <- data.frame()
+coefs <- data.frame()
 
 for(s in levels.syst) {
   
@@ -95,16 +96,18 @@ for(s in levels.syst) {
   temp <- melted %>%
     filter(system==s, variable==v)
   temp <- na.omit(temp)
-
   
-  mod = lm(pdo ~ value*era, data=temp)
-
+  mod = lm(pdo ~ -1 + scale_x:era, data=temp)
+  coefs = rbind(coefs, data.frame(b1 = coef(mod)[1],
+                                  b2 = coef(mod)[2]))
   model.preds <- rbind(model.preds,
                        data.frame(year=temp$year, variable=temp$variable, 
                                   obs=temp$pdo,
                                   pred=predict(mod)))
   }}
 
+coefs$variable = levels.vars
+  
 model.preds$era <- as.factor(ifelse(model.preds$year <=1988, 1, 2))
 model.preds$variable <- as.character((model.preds$variable))
 
