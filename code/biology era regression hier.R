@@ -411,13 +411,13 @@ salmon <- salmon %>%
 
 names(salmon)[c(1,2)] <- c("system", "ratio")
 salmon$var.order <- ifelse(salmon$var=="PDO", 1, 2)
-salmon$log.ratio <- log(exp(salmon$ratio), 10)
+
 
 # all.data <- rbind(pdo.biol.data, npgo.biol.data, salmon)
 all.data <- rbind(pdo.biol.data, npgo.biol.data)
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
-all.data$log.ratio <- log(all.data$ratio/100, 10)
+
 
 
 # all.data <- rbind(all.data, salmon) # uncomment to combine DFs
