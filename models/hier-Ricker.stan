@@ -115,8 +115,8 @@ model {
   for(r in 1:R) { //Regions
     mu_beta[r] ~ normal(0,5);
     mu_ratio[r] ~ normal(0,5);
-    sigma_beta[r] ~ normal(0,5);//cauchy(0,5);
-    sigma_ratio[r] ~ normal(0,5);//cauchy(0,5);
+    sigma_beta[r] ~ normal(0,5); //cauchy(0,5);
+    sigma_ratio[r] ~ normal(0,5); //cauchy(0,5);
   }
     
     
