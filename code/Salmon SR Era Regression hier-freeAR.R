@@ -75,8 +75,7 @@ out.se_looic <- array(dim=c(length(species), length(vars)), dimnames=list(specie
 for(fit.species in species) {
   for(var in vars) {
 
-
-    # Define Output File Names ============================================
+   # Define Output File Names ============================================
     file.name <- paste0(fit.species,"-",var)
 
     # Load/Compile Data ================================================

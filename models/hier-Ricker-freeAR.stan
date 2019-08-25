@@ -59,10 +59,13 @@ transformed parameters {
   // Convert Ratios
   vector[S] exp_ratio;
 
+  // Convert phi to be (-1, 1)
+  vector[S] phi_trans;
+
   //Generate Predicted values
   for(s in 1:S) {
     exp_ratio[s] = exp(ratio[s]);
-
+    phi_trans[s] = 2*exp(phi[s])/(1+exp(phi[s])) - 1;
     //Alternatively, we may be able to do this with an if statement.... But it makes the JAGSer inside of me cry :(
       for(n in 1:maxN) {
         if(n<=N[s]) {
@@ -76,10 +79,10 @@ transformed parameters {
           // Calculate predicted ln(R/S)
           if(era[s,n]==1) {
             pred[s,n] = ricker_alpha[s] - ricker_beta[s]*spawn[s,n] + covar[s,n]*beta[s]  +
-              phi[s] * residual[s,n];
+              phi_trans[s] * residual[s,n];
           }else {
             pred[s,n] = ricker_alpha[s] - ricker_beta[s]*spawn[s,n] + covar[s,n]*(beta[s]*exp_ratio[s])  +
-              phi[s] * residual[s,n];
+              phi_trans[s] * residual[s,n];
           }
 
 
