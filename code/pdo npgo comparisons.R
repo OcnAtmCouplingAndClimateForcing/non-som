@@ -135,6 +135,47 @@ ggplot(win.plot, aes(year, value, fill=color)) +
   geom_bar(stat="identity", color="black", size=0.05) +
   facet_wrap(~index, scales="free_y", nrow=2) + 
   scale_fill_manual(values=c("blue", "red"), labels=c("1950-1988", "1989-2012")) +
-  theme(legend.position = c(0.15,0.92), legend.title = element_blank())
+  theme(legend.position = "none", axis.title.x = element_blank()) 
 
 ggsave("plots/winter pdo npgo time series.png")
+
+# finally, winter acf by era
+
+npgo1 <- win.plot %>%
+  filter(index=="npgo", year %in% 1950:1988)
+ar.npgo1 <- acf(npgo1$value)
+plot(ar.npgo1)
+
+npgo2 <- win.plot %>%
+  filter(index=="npgo", year %in% 1989:2012)
+ar.npgo2 <- acf(npgo2$value)
+ar.npgo2
+plot(ar.npgo2)
+
+pdo1 <- win.plot %>%
+  filter(index=="pdo", year %in% 1950:1988)
+ar.pdo1 <- acf(pdo1$value)
+ar.pdo1
+plot(ar.pdo1)
+
+pdo2 <- win.plot %>%
+  filter(index=="pdo", year %in% 1989:2012)
+ar.pdo2 <- acf(pdo2$value)
+ar.pdo2
+plot(ar.pdo2)
+
+# combine and plot
+ar.plot <- data.frame(lag=rep(1:10, 4), ar=(c(ar.npgo1$acf[2:11], ar.npgo2$acf[2:11], ar.pdo1$acf[2:11], ar.pdo2$acf[2:11])),
+                      index=rep(c("npgo", "pdo"), each=20), era=rep(c("1950-1988", "1989-2012", "1950-1988", "1989-2012"), each=10))
+
+ar.plot$index <- reorder(ar.plot$index, desc(ar.plot$index))
+
+ggplot(ar.plot, aes(as.factor(lag), ar, fill=era)) +
+  theme_linedraw() +
+  geom_bar(stat="identity", position="dodge", color="black", size=0.05) +
+  facet_wrap(~index, nrow=2) +
+  ylab("autocorrelation") +
+  theme(legend.position = c(0.8,0.9), legend.title = element_blank()) +
+  xlab("lag (years)")
+
+ggsave("plots/pdo npgo winter ar by era.png")
