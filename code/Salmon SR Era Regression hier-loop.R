@@ -33,19 +33,19 @@ library(bayesplot)
 # Define Workflow Paths ============================================
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
-dir.output <- file.path(wd,"output")
+dir.output <- file.path(wd,"output","CurryTesting")
 dir.figs <- file.path(wd,"plots")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
 
 # CONTROL ==========================================================
-fit <- FALSE # Do we fit the model, or just load saved .rds outputs
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 1e4
-n.thin <- 5
+n.iter <- 2e4
+n.thin <- 20
 
 # Select Species 
 species <- c("Sockeye","Pink","Chum")
@@ -53,9 +53,11 @@ fit.species <- species[1]
 
 
 # Whether to fit a model with PDO or NPGO 
-vars <- c("pdo1","pdo2a","pdo2b",
-          "pdo3","npgo","npgo2a",
-          "npgo2b","npgo3")
+# vars <- c("pdo1","pdo2a","pdo2b",
+#           "pdo3","npgo","npgo2a",
+#           "npgo2b","npgo3")
+
+vars <- c("pdo2a","npgo2a")
 
 var <- vars[1]
 
