@@ -2,15 +2,15 @@
 <html>
 <body>
 
-<pre>#  Last update 03-Dec-2018 by E. Di Lorenzo 
+<pre>#  Last update 17-Jul-2019 by E. Di Lorenzo 
 #  NPGO index monthly averages 
-#  from Jan-1950  to  Dec-2018 
+#  from Jan-1950  to  Jul-2019 
 # 
 #  WARNING: Values after Dec-2004 are updated  
 #  using Satellite SSHa from AVISO Delayed Time product.   
 #  http://opendap.aviso.oceanobs.com/thredds/dodsC/dataset-duacs-dt-global-allsat-msla-h 
 # 
-#  PRELIMINARY: Values after Jun-2018 are preliminary and updated  
+#  PRELIMINARY: Values after Jan-2019 are preliminary and updated  
 #  using Satellite SSHa from AVISO Near Real Time product.   
 #  http://opendap.aviso.oceanobs.com/thredds/dodsC/dataset-duacs-nrt-over30d-global-allsat-msla-h 
 # 
@@ -849,13 +849,20 @@
    2.0180000e+03   3.0000000e+00  -2.0429687e+00
    2.0180000e+03   4.0000000e+00  -2.0587792e+00
    2.0180000e+03   5.0000000e+00  -1.9215388e+00
-   2.0180000e+03   6.0000000e+00  -1.8117177e+00
-   2.0180000e+03   7.0000000e+00  -1.3976708e+00
-   2.0180000e+03   8.0000000e+00  -1.8764217e+00
-   2.0180000e+03   9.0000000e+00  -2.2668930e+00
-   2.0180000e+03   1.0000000e+01  -2.5582400e+00
-   2.0180000e+03   1.1000000e+01  -2.0905777e+00
-   2.0180000e+03   1.2000000e+01  -1.9662518e+00
+   2.0180000e+03   6.0000000e+00  -1.9344150e+00
+   2.0180000e+03   7.0000000e+00  -1.5719998e+00
+   2.0180000e+03   8.0000000e+00  -2.1246452e+00
+   2.0180000e+03   9.0000000e+00  -2.3284792e+00
+   2.0180000e+03   1.0000000e+01  -2.3381128e+00
+   2.0180000e+03   1.1000000e+01  -1.7539675e+00
+   2.0180000e+03   1.2000000e+01  -1.0830255e+00
+   2.0190000e+03   1.0000000e+00  -4.5446100e-01
+   2.0190000e+03   2.0000000e+00  -2.4107612e+00
+   2.0190000e+03   3.0000000e+00  -2.1096375e+00
+   2.0190000e+03   4.0000000e+00  -1.9790454e+00
+   2.0190000e+03   5.0000000e+00  -1.7575740e+00
+   2.0190000e+03   6.0000000e+00  -1.9872847e+00
+   2.0190000e+03   7.0000000e+00  -2.2770138e+00
 </pre>
 
 </body>
