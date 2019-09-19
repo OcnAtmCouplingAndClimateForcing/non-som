@@ -199,8 +199,8 @@ for(s in levels.syst) {
   # create an array for caterpillar plots by variable
   draws = rstan::extract(mod,permuted=FALSE)
   par_names = dimnames(draws)$parameters
-  par_names[grep("exp_mu_ratio", par_names)] = "global mean"
-  par_names[grep("exp_ratio", par_names)] = levels(temp$variable)
+  par_names[grep("^mu_ratio", par_names)] = "global mean"
+  par_names[grep("^exp_ratio", par_names)] = levels(temp$variable)
   dimnames(draws)$parameters = par_names
   idx = which(par_names %in% c("global mean",levels(temp$variable)))
 
@@ -225,8 +225,8 @@ for(s in levels.syst) {
   resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
   resid_df$resid = temp$value - resid_df$pred
   resid_df$resid0 = temp$value - resid_df$pred0
-  resids = group_by(resid_df, variable) %>% 
-    arrange(year) %>% 
+  resids = group_by(resid_df, variable) %>%
+    arrange(year) %>%
     summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
               acf1 = unlist(acf(resid0,plot=FALSE))[2])
   resids$response = "PDO"
@@ -235,8 +235,8 @@ for(s in levels.syst) {
 
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
-                           ifelse(model.data$system=="Gulf of Alaska", 2, 
-                                  ifelse(model.data$system=="Northern California Current", 3, 
+                           ifelse(model.data$system=="Gulf of Alaska", 2,
+                                  ifelse(model.data$system=="Northern California Current", 3,
                                          ifelse(model.data$system=="Central California Current", 4, 5))))
 
 model.data$system <- reorder(model.data$system, model.data$order)
@@ -304,8 +304,8 @@ for(s in levels.syst) {
   # create an array for caterpillar plots by variable
   draws = rstan::extract(mod,permuted=FALSE)
   par_names = dimnames(draws)$parameters
-  par_names[grep("exp_mu_ratio", par_names)] = "global mean"
-  par_names[grep("exp_ratio", par_names)] = levels(temp$variable)
+  par_names[grep("^mu_ratio", par_names)] = "global mean"
+  par_names[grep("^ratio", par_names)] = levels(temp$variable)
   dimnames(draws)$parameters = par_names
   idx = which(par_names %in% c("global mean",levels(temp$variable)))
 
@@ -318,7 +318,7 @@ for(s in levels.syst) {
     theme_linedraw()
   print(g)
   dev.off()
-  
+
   # Fit null model to look at autocorrelation between model with and without 2 slopes
   mod0 = stan(file="models/mod0.stan", data=stan_data, chains=3, warmup=4000, iter=6000,thin=2,
               pars = c("beta","mu_beta","sigma_beta","pred"),
@@ -330,8 +330,8 @@ for(s in levels.syst) {
   resid_df$pred0 = apply(pars0$pred,2,mean)# predictions from 1slope model
   resid_df$resid = temp$value - resid_df$pred
   resid_df$resid0 = temp$value - resid_df$pred0
-  resids = group_by(resid_df, variable) %>% 
-    arrange(year) %>% 
+  resids = group_by(resid_df, variable) %>%
+    arrange(year) %>%
     summarize(acf2 = unlist(acf(resid,plot=FALSE))[2],
               acf1 = unlist(acf(resid0,plot=FALSE))[2])
   resids$response = "NPGO"
@@ -340,8 +340,8 @@ for(s in levels.syst) {
 
 # order the systems north-south
 model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
-                           ifelse(model.data$system=="Gulf of Alaska", 2, 
-                                  ifelse(model.data$system=="Northern California Current", 3, 
+                           ifelse(model.data$system=="Gulf of Alaska", 2,
+                                  ifelse(model.data$system=="Northern California Current", 3,
                                          ifelse(model.data$system=="Central California Current", 4, 5))))
 
 model.data$system <- reorder(model.data$system, model.data$order)
@@ -364,7 +364,7 @@ npgo.env.data$var <- "NPGO"
 pdo.env.data$var <- "PDO"
 all.data <- rbind(pdo.env.data, npgo.env.data)
 
-# colorblind palette 
+# colorblind palette
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
 all.data$log.ratio <- log(all.data$ratio/100, 10)
@@ -374,14 +374,14 @@ cb <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E
 
 env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
   theme_linedraw() +
-  scale_fill_manual(values=cb[c(6,3,4,2,8)], 
-                    labels=c("Bering Sea", "Gulf of Alaska", 
+  scale_fill_manual(values=cb[c(6,3,4,2,8)],
+                    labels=c("Bering Sea", "Gulf of Alaska",
                              "Northern Cal. Curr.", "Central Cal. Curr.", "Southern Cal. Curr.")) +
   # scale_fill_colorblind() +
   # scale_fill_tableau() +
   # scale_fill_brewer(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
   # geom_eye() +
-  
+
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
   stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
@@ -391,7 +391,7 @@ env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank(), legend.position = c(0.15,0.15)) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c()) 
+  coord_flip(ylim=c())
 
 env.plt
 
@@ -410,14 +410,14 @@ all.data$log.ratio <- log(all.data$ratio/100, 10)
 
 all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
   theme_linedraw() +
-  scale_fill_manual(values=cb[c(6,3,4,2,8)], 
-                    labels=c("Bering Sea", "Gulf of Alaska", 
+  scale_fill_manual(values=cb[c(6,3,4,2,8)],
+                    labels=c("Bering Sea", "Gulf of Alaska",
                              "Northern Cal. Curr.", "Central Cal. Curr.", "Southern Cal. Curr.")) +
   # scale_fill_colorblind() +
   # scale_fill_tableau() +
   # scale_fill_brewer(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
   # geom_eye() +
-  
+
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
   stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
@@ -427,7 +427,7 @@ all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank()) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(-1.5,1.2)) 
+  coord_flip(ylim=c(-1.5,1.2))
 
 all.plt
 

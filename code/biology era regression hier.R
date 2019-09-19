@@ -232,8 +232,8 @@ for(s in levels.syst) {
   # create an array for caterpillar plots by variable
   draws = rstan::extract(mod,permuted=FALSE)
   par_names = dimnames(draws)$parameters
-  par_names[grep("exp_mu_ratio", par_names)] = "global mean"
-  par_names[grep("exp_ratio", par_names)] = levels(temp$variable)
+  par_names[grep("^mu_ratio", par_names)] = "global mean"
+  par_names[grep("^ratio", par_names)] = levels(temp$variable)
   dimnames(draws)$parameters = par_names
   idx = which(par_names %in% c("global mean",levels(temp$variable)))
 
@@ -332,8 +332,8 @@ for(s in levels.syst) {
   # create an array for caterpillar plots by variable
   draws = rstan::extract(mod,permuted=FALSE)
   par_names = dimnames(draws)$parameters
-  par_names[grep("exp_mu_ratio", par_names)] = "global mean"
-  par_names[grep("exp_ratio", par_names)] = levels(temp$variable)
+  par_names[grep("^mu_ratio", par_names)] = "global mean"
+  par_names[grep("^ratio", par_names)] = levels(temp$variable)
   dimnames(draws)$parameters = par_names
   idx = which(par_names %in% c("global mean",levels(temp$variable)))
 
