@@ -25,7 +25,7 @@ transformed parameters {
     if(era[i]==1) {
       pred[i] = x[i]*beta[variable[i]];
     } else {
-      pred[i] = x[i]*beta[variable[i]]*exp_ratio[variable[i]];
+      pred[i] = x[i]*(beta[variable[i]] * ratio[variable[i]]);
     }
   }
 }
