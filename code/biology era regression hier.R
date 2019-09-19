@@ -11,7 +11,6 @@ library(lme4)
 library(rstan)
 library(ggthemes)
 library(tidybayes)
-library(cowplot)
 library(bayesplot)
 
 # download PDO / NPGO and process
@@ -426,7 +425,7 @@ all.data$var <- reorder(all.data$var, all.data$var.order)
 # colorblind...
 cb <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
-biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
+biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio, fill=system)) +
   theme_linedraw() +
   scale_fill_manual(values=cb[c(6,3,4,2,8)],
                     labels=c("Bering Sea", "Gulf of Alaska",
@@ -441,7 +440,7 @@ biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, f
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
-  ylab("Log ratio: Era 1 slope / Era 2 slope") +
+  ylab("Ratio: Era 1 slope / Era 2 slope (%)") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank(), legend.position = c(0.15,0.15)) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
