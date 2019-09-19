@@ -46,7 +46,7 @@ fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 1e3#2e4
+n.iter <- 2e3#2e4
 n.thin <- 2#0
 
 # Select Species
@@ -199,7 +199,7 @@ for(fit.species in species) {
     }
     
     # Write a .csv of Model Output =====================================
-    write.csv(summary(stan.fit)$summary, file=file.path(dir.figs, paste0(temp.species,"_summary.csv")))
+    write.csv(summary(stan.fit)$summary, file=file.path(dir.figs, paste0(fit.species,"_summary.csv")))
     # Calculate WAIC for Model =========================================
 
 
