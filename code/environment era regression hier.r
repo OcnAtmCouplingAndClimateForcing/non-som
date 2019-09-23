@@ -178,7 +178,7 @@ for(s in levels.syst) {
 
   model.data = rbind(model.data,
                      data.frame(system=s,
-                       ratio=100*exp(pars$mu_ratio)))
+                       ratio=100*(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
 
@@ -209,7 +209,7 @@ for(s in levels.syst) {
     pars = c("global mean",levels(temp$variable))) +
     geom_vline(xintercept=1,col="red",linetype="dashed") +
     ggtitle(paste0("PDO: Region ",s)) +
-    xlab("Avg ratio: Era 1 slope / Era 2 slope") +
+    xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
   print(g)
   dev.off()
@@ -283,7 +283,7 @@ for(s in levels.syst) {
   pars = rstan::extract(mod,permuted=TRUE)
 
   model.data = rbind(model.data,
-                     data.frame(system=s, ratio=100*exp(pars$mu_ratio)))
+                     data.frame(system=s, ratio=100*(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
 
@@ -314,7 +314,7 @@ for(s in levels.syst) {
     pars = c("global mean",levels(temp$variable))) +
     geom_vline(xintercept=1,col="red",linetype="dashed") +
     ggtitle(paste0("NPGO: Region ",s)) +
-    xlab("Avg ratio: Era 1 slope / Era 2 slope") +
+    xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
   print(g)
   dev.off()
@@ -387,11 +387,11 @@ env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
-  ylab("Log ratio: Era 1 slope / Era 2 slope") +
+  ylab("Avg. ratio: Era 2 slope / Era 1 slope") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
-        legend.title = element_blank(), legend.position = c(0.15,0.15)) +
+        legend.title = element_blank(), legend.position = c(0.8,0.15)) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c())
+  coord_flip(ylim=c(-2,2))
 
 env.plt
 
@@ -423,11 +423,11 @@ all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~reorder(var.type, desc(var.type)), ncol=2) +
-  ylab("Log ratio: Era 1 slope / Era 2 slope") +
+  ylab("Avg ratio: Era 2 slope / Era 1 slope") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank()) +
   geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(-1.5,1.2))
+  coord_flip(ylim=c(-2.5,0.7))
 
 all.plt
 
@@ -445,10 +445,10 @@ cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
-  ylab("Avg ratio: Era 1 slope / Era 2 slope") +
+  ylab("Avg ratio: Era 2 slope / Era 1 slope") +
   theme(axis.text.y = element_blank()) +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,9))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 cat.plt
 ggsave("env regression change pdo-npgo slope_cater.png", plot=cat.plt,
@@ -465,10 +465,10 @@ cat.plt.pdo <- all.data %>% filter(var=='PDO') %>% ggplot(aes(x=system, y=ratio/
   stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
-  ylab("Avg ratio: Era 1 slope / Era 2 slope") +
+  ylab("Avg ratio: Era 2 slope / Era 1 slope") +
   theme(axis.text.y = element_blank(), legend.position='top') +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,3))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 cat.plt.npgo <- all.data %>% filter(var=='NPGO') %>% ggplot(aes(x=system, y=ratio/100, fill=system)) +
   theme_linedraw() +
@@ -481,8 +481,8 @@ cat.plt.npgo <- all.data %>% filter(var=='NPGO') %>% ggplot(aes(x=system, y=rati
   facet_wrap(~var, ncol=1) +
   ylab("Avg ratio: Era 1 slope / Era 2 slope") +
   theme(axis.text.y = element_blank(), legend.position="none") +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,9))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3.5,3.5))
 
 # Plot Combined with Sepearte
 cat.plt.2 <- plot_grid(cat.plt.pdo, cat.plt.npgo, ncol=1, rel_heights = c(1.1,1))
@@ -508,8 +508,8 @@ cat.plt.3 <- ggplot(all.data, aes(x=var, y=ratio/100, fill=var)) +
   xlab("") +
   theme(axis.text.y = element_blank(),
         legend.position = 'top') +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,7))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 cat.plt.3
 ggsave("env regression change pdo-npgo slope_cater3.png", plot=cat.plt.3,

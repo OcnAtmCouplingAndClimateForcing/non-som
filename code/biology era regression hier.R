@@ -211,7 +211,7 @@ for(s in levels.syst) {
 
   model.data = rbind(model.data,
     data.frame(system=s,
-      ratio=100*exp(pars$mu_ratio)))
+      ratio=100*(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
 
@@ -242,7 +242,7 @@ for(s in levels.syst) {
     pars = c("global mean",levels(temp$variable))) +
     geom_vline(xintercept=1,col="red",linetype="dashed") +
     ggtitle(paste0("PDO: Region ",s)) +
-    xlab("Avg ratio: Era 1 slope / Era 2 slope") +
+    xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
   print(g)
   dev.off()
@@ -311,7 +311,7 @@ for(s in levels.syst) {
   pars = rstan::extract(mod,permuted=TRUE)
 
   model.data = rbind(model.data,
-    data.frame(system=s, ratio=100*exp(pars$mu_ratio)))
+    data.frame(system=s, ratio=100*(pars$mu_ratio)))
 
   temp$pred = apply(pars$pred,2,mean)
 
@@ -342,7 +342,7 @@ for(s in levels.syst) {
     pars = c("global mean",levels(temp$variable))) +
     geom_vline(xintercept=1,col="red",linetype="dashed") +
     ggtitle(paste0("NPGO: Region ",s)) +
-    xlab("Avg ratio: Era 1 slope / Era 2 slope") +
+    xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
   print(g)
   dev.off()
@@ -505,8 +505,8 @@ cat.plt.pdo <- all.data %>% filter(var=='PDO') %>% ggplot(aes(x=system, y=ratio/
   facet_wrap(~var, ncol=1) +
   ylab("Avg ratio: Era 1 slope / Era 2 slope") +
   theme(axis.text.y = element_blank(), legend.position='top') +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,3))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 cat.plt.npgo <- all.data %>% filter(var=='NPGO') %>% ggplot(aes(x=system, y=ratio/100, fill=system)) +
   theme_linedraw() +
@@ -519,8 +519,8 @@ cat.plt.npgo <- all.data %>% filter(var=='NPGO') %>% ggplot(aes(x=system, y=rati
   facet_wrap(~var, ncol=1) +
   ylab("Avg ratio: Era 1 slope / Era 2 slope") +
   theme(axis.text.y = element_blank(), legend.position="none") +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,6))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 # Plot Combined with Sepearte
 cat.plt.2 <- plot_grid(cat.plt.pdo, cat.plt.npgo, ncol=1, rel_heights = c(1.1,1))
@@ -543,8 +543,8 @@ cat.plt.3 <- ggplot(all.data, aes(x=var, y=ratio/100, fill=var)) +
   xlab("") +
   theme(axis.text.y = element_blank(),
         legend.position = 'top') +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(0,6))
+  geom_hline(aes(yintercept=0), color="red", linetype="dotted", size=1) +
+  coord_flip(ylim=c(-3,3))
 
 
 cat.plt.3
