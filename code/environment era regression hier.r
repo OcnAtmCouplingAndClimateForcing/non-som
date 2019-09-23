@@ -207,7 +207,7 @@ for(s in levels.syst) {
   png(paste0(file="plots/SI_PDO_",s,".png"))
   g = mcmc_intervals(draws,
     pars = c("global mean",levels(temp$variable))) +
-    geom_vline(xintercept=1,col="red",linetype="dashed") +
+    geom_vline(xintercept=0,col="red",linetype="dashed") +
     ggtitle(paste0("PDO: Region ",s)) +
     xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
@@ -312,7 +312,7 @@ for(s in levels.syst) {
   png(paste0(file="plots/SI_NPGO_",s,".png"))
   g = mcmc_intervals(draws,
     pars = c("global mean",levels(temp$variable))) +
-    geom_vline(xintercept=1,col="red",linetype="dashed") +
+    geom_vline(xintercept=0,col="red",linetype="dashed") +
     ggtitle(paste0("NPGO: Region ",s)) +
     xlab("Avg ratio: Era 2 slope / Era 1 slope") +
     theme_linedraw()
