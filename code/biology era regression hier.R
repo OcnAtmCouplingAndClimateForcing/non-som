@@ -366,11 +366,6 @@ for(s in levels.syst) {
   write.csv(resids,file=paste0("output/NPGO_",s,"_resid",".csv"))
 }
 
-# order the systems north-south
-model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
-                           ifelse(model.data$system=="Gulf of Alaska", 2,
-                                  ifelse(model.data$system=="Northern California Current", 3,
-                                         ifelse(model.data$system=="Central California Current", 4, 5))))
 
 model.data$system <- reorder(model.data$system, model.data$order)
 
@@ -417,8 +412,13 @@ all.data <- rbind(pdo.biol.data, npgo.biol.data)
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
 
+# order the systems north-south
+all.data$order <- ifelse(all.data$system=="Bering Sea", 1,
+                           ifelse(all.data$system=="Gulf of Alaska", 2,
+                                  ifelse(all.data$system=="Northern California Current", 3,
+                                         ifelse(all.data$system=="Central California Current", 4, 5))))
 
-
+all.data$system <- reorder(all.data$system, all.data$order)
 # all.data <- rbind(all.data, salmon) # uncomment to combine DFs
 
 
@@ -471,24 +471,27 @@ salmon.plt <- ggplot(salmon, aes(x=reorder(system, desc(system)), y=ratio, fill=
 
 ggsave("plots/salmon plot.png")
 
-cat.plt <- ggplot(all.data, aes(x=system, y=ratio/100, fill=system)) +
+cat.plt <- ggplot(all.data, aes(x=reorder(system, desc(order)), y=ratio/100, fill=system)) +
              theme_linedraw() +
              # scale_fill_colorblind() +
-             scale_fill_tableau() +
+             # scale_fill_tableau() +
              # scale_fill_brewer(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
              # geom_eye() +
-
+             scale_fill_manual(values=cb[c(6,3,4,2,8)],
+                    labels=c("Bering Sea", "Gulf of Alaska",
+                             "Northern Cal. Curr.", "Central Cal. Curr.", "Southern Cal. Curr.")) +
              geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
              stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
              stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
              stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
              facet_wrap(~var, ncol=1) +
              ylab("Avg ratio: Era 1 slope / Era 2 slope") +
-             theme(axis.text.y = element_blank()) +
+             theme(axis.text.y = element_blank(), axis.title.y = element_blank(), legend.title = element_blank()) +
              geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-             coord_flip(ylim=c(0,7))
+             coord_flip(ylim=c(-3,3))
 
 cat.plt
+
 ggsave("biol regression change pdo-npgo slope_cater.png", plot=cat.plt,
          height=7, width=7, units="in", dpi=300)
 
