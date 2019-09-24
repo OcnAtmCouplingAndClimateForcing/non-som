@@ -246,6 +246,8 @@ pdo.env.data <- model.data
 # save for future reference
 write.csv(pdo.env.data, "models/pdo_environment_model_data.csv")
 
+pdo.env.data <- read.csv("models/pdo_environment_model_data.csv", row.names = 1)
+
 #################
 ## and the same thing for npgo
 model.data <- data.frame()
@@ -351,6 +353,8 @@ npgo.env.data <- model.data
 # save for future reference
 write.csv(npgo.env.data, "models/npgo_environment_model_data.csv")
 
+npgo.env.data <- read.csv("models/npgo_environment_model_data.csv", row.names = 1)
+
 # Caterpillar Plot ===============================
 # Helper Functions
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
@@ -367,8 +371,15 @@ all.data <- rbind(pdo.env.data, npgo.env.data)
 # colorblind palette
 all.data$var.order <- ifelse(all.data$var=="PDO", 1, 2)
 all.data$var <- reorder(all.data$var, all.data$var.order)
-all.data$log.ratio <- log(all.data$ratio/100, 10)
+# all.data$log.ratio <- log(all.data$ratio/100, 10)
 
+# order the systems north-south
+all.data$order <- ifelse(all.data$system=="Bering Sea", 1,
+                         ifelse(all.data$system=="Gulf of Alaska", 2,
+                                ifelse(all.data$system=="Northern California Current", 3,
+                                       ifelse(all.data$system=="Central California Current", 4, 5))))
+
+all.data$system <- reorder(all.data$system, all.data$order)
 # colorblind...
 cb <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
@@ -406,9 +417,9 @@ all.data$var <- reorder(all.data$var, all.data$var.order)
 all.data$type.order <- ifelse(all.data$var=="environment", 1, 2)
 all.data$type <- reorder(all.data$type, all.data$type.order)
 all.data$var.type <- paste(all.data$var, all.data$type, sep=" - ")
-all.data$log.ratio <- log(all.data$ratio/100, 10)
+# all.data$log.ratio <- log(all.data$ratio/100, 10)
 
-all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
+all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio/100, fill=system)) +
   theme_linedraw() +
   scale_fill_manual(values=cb[c(6,3,4,2,8)],
                     labels=c("Bering Sea", "Gulf of Alaska",
@@ -427,7 +438,7 @@ all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank()) +
   geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(-2.5,0.7))
+  coord_flip(ylim=c(-3,3))
 
 all.plt
 
