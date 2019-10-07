@@ -7,6 +7,6 @@
 *.Rproj
 .DS_Store
 *.DS_Store
-
 output/*.rds
 output/CurryTesting
+output/FreeAR/*.rds
