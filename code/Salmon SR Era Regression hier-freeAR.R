@@ -46,8 +46,8 @@ fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 2e3#2e4
-n.thin <- 2#0
+n.iter <- 5e4#2e4
+n.thin <- 25
 
 # Select Species
 species <- c("Sockeye","Pink","Chum")
@@ -72,6 +72,10 @@ out.se_waic <- array(dim=c(length(species), length(vars)), dimnames=list(species
 out.looic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
 out.se_looic <- array(dim=c(length(species), length(vars)), dimnames=list(species, vars))
 
+start <- date()
+
+# fit.species <- species[1]
+# var <- vars[1]
 for(fit.species in species) {
   for(var in vars) {
 
@@ -218,28 +222,31 @@ for(fit.species in species) {
 
     mu_ratios <- data.frame(pars$mu_ratio)
     names(mu_ratios) <- regions
-    exp_mu_ratios <- exp(mu_ratios)
+    # exp_mu_ratios <- exp(mu_ratios)
 
-    list.exp_mu_ratios <- melt(exp_mu_ratios)
+    list.mu_ratios <- melt(mu_ratios)
 
-    g <- list.exp_mu_ratios %>% ggplot(aes(value, fill=variable)) +
+    g <- list.mu_ratios %>% ggplot(aes(value, fill=variable)) +
       scale_fill_colorblind() +
       geom_density(alpha=0.5)
-    g
+    # g
+    ggsave(file=file.path(dir.figs,"mu_ratio hist.png"), plot=g,
+           height=6, width=6, units='in')
 
-    g2 <- list.exp_mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
+    g2 <- list.mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
       scale_fill_colorblind() +
       geom_eye(alpha=0.5) +
       coord_flip() +
       theme(legend.position = 'none')
-    g2
+    ggsave(file=file.path(dir.figs,"mu_ratio geom_eye.png"), plot=g2,
+             height=6, width=6, units='in')
 
 
     # END LOOP ========================================================
   } #next var
 } #next species
 
-
+end <- date()
 
 # Save WAIC Looic =================================================
 write.csv(out.waic, file.path(dir.output,"waic.csv"))
@@ -248,6 +255,11 @@ write.csv(out.looic, file.path(dir.output,"looic.csv"))
 write.csv(out.se_looic, file.path(dir.output,"se_looic.csv"))
 
 
+# Timing Diagnostics
+print(paste('n.iter:',n.iter))
+print(paste('n.thin:',n.thin))
+print(start)
+print(end)
 
 
 
