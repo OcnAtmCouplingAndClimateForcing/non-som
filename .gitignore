@@ -9,4 +9,4 @@
 *.DS_Store
 output/*.rds
 output/CurryTesting
-output/FreeAR/*.rds
+output/freeAR/*.rds
