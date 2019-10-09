@@ -10,3 +10,4 @@
 output/*.rds
 output/CurryTesting
 output/freeAR/*.rds
+output/freeAR_2/*.rds
