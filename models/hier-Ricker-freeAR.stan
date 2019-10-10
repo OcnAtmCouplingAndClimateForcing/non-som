@@ -39,7 +39,6 @@ parameters {
   //Ricker Params
   real ricker_mu_alpha;
   real<lower=0> ricker_sigma_alpha;
-
   real ricker_alpha[S]; //Note, could treat as RE by drawing from common Normal() where mean/var are estimates...
   real<lower=0> ricker_beta[S]; //No sense in structuring as RE, given scale issues.
   //Variances
