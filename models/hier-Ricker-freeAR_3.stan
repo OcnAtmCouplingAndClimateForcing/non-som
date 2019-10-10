@@ -66,7 +66,7 @@ transformed parameters {
   
   //Generate Predicted values
   for(s in 1:S) {
-    beta2[s] = beta[s] * ratio[region[s]];
+    beta2[s] = beta[s] + ratio[region[s]]; //Effect is now additive.
     
     phi_trans[s] = 2*exp(phi[s])/(1+exp(phi[s])) - 1;
     //Alternatively, we may be able to do this with an if statement.... But it makes the JAGSer inside of me cry :(
@@ -122,7 +122,7 @@ model {
   for(r in 1:R) { //Regions
     mu_beta[r] ~ normal(0,5);
     // mu_ratio[r] ~ normal(0,5);
-    ratio[r] ~ normal(0,1);
+    ratio[r] ~ normal(0,5);
     sigma_beta[r] ~ normal(0,5); //cauchy(0,5);
     // sigma_ratio[r] ~ normal(0,5); //cauchy(0,5);
   }
