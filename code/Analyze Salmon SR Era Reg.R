@@ -31,8 +31,8 @@ library(shinystan)
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
 # dir.output <- file.path(wd,"output")
-dir.output <- file.path(wd,"output","CurryTesting")
-dir.figs <- file.path(wd,"plots", "Salmon")
+dir.output <- file.path(wd,"output","freeAR")
+dir.figs <- file.path(wd,"plots", "freeAR")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
@@ -93,7 +93,7 @@ for(s in 1:n.species) {
     list.neff <- rbind(list.neff, data.frame(temp.species, temp.var, neff))
     
     # Extract Autoregression Coeff ===========================================
-    list.phi <- rbind(list.phi, data.frame(temp.species, temp.var, temp.pars$phi))
+    # list.phi <- rbind(list.phi, data.frame(temp.species, temp.var, temp.pars$phi))
     
     # Extract Regional Ratio Information =====================================
     temp.mu.ratio <- data.frame(temp.pars$mu_ratio)
@@ -117,26 +117,26 @@ for(s in 1:n.species) {
 # Save Extracted Objects ==========================================
 names(list.rhat) <- c("species","var","value")
 names(list.neff) <- c("species","var","value")
-names(list.phi) <- c("species","var","value")
+# names(list.phi) <- c("species","var","value")
 
-write.csv(list.rhat, file=file.path(wd,"output","Salmon","list.rhat.csv")) 
-write.csv(list.neff, file=file.path(wd,"output","Salmon","list.neff.csv")) 
-write.csv(list.phi, file=file.path(wd,"output","Salmon","list.phi.csv")) 
+write.csv(list.rhat, file=file.path(dir.output,"list.rhat.csv")) 
+write.csv(list.neff, file=file.path(dir.output,"list.neff.csv")) 
+# write.csv(list.phi, file=file.path(wd,"output","Salmon","list.phi.csv")) 
 
 
 names(list.mu.ratio) <- c("species","var","region","value")
 names(list.sigma.ratio) <- c("species","var","region","value")
 
-write.csv(list.mu.ratio, file=file.path(wd,"output","Salmon","list.mu.ratio.csv")) 
-write.csv(list.sigma.ratio, file=file.path(wd,"output","Salmon","list.sigma.ratio.csv")) 
+write.csv(list.mu.ratio, file=file.path(dir.output,"list.mu.ratio.csv")) 
+write.csv(list.sigma.ratio, file=file.path(dir.output,"list.sigma.ratio.csv")) 
 
 }else {
-  list.rhat <- read.csv(list.rhat, file=file.path(wd,"output","Salmon","list.rhat.csv")) 
-  list.neff <- read.csv(file=file.path(wd,"output","Salmon","list.neff.csv")) 
-  list.phi <- read.csv(file=file.path(wd,"output","Salmon","list.phi.csv")) 
+  list.rhat <- read.csv(list.rhat, file=file.path(dir.output,"list.rhat.csv")) 
+  list.neff <- read.csv(file=file.path(dir.output,"list.neff.csv")) 
+  # list.phi <- read.csv(file=file.path(wd,"output","Salmon","list.phi.csv")) 
   
-  list.mu.ratio <- read.csv(file=file.path(wd,"output","Salmon","list.mu.ratio.csv")) 
-  list.sigma.ratio <- read.csv(file=file.path(wd,"output","Salmon","list.sigma.ratio.csv")) 
+  list.mu.ratio <- read.csv(file=file.path(dir.output,"list.mu.ratio.csv")) 
+  list.sigma.ratio <- read.csv(file=file.path(dir.output,"list.sigma.ratio.csv")) 
 }
   
 
@@ -153,8 +153,8 @@ g.rhat <- ggplot(list.rhat, aes(value, fill=var)) +
             facet_wrap(~species)
 g.rhat
 
-list.rhat[list.rhat$value>1.2 & !is.na(list.rhat$value) & !is.na(list.rhat$value) &
-            species=="Pink",]
+# list.rhat[list.rhat$value>1.2 & !is.na(list.rhat$value) & !is.na(list.rhat$value) &
+#             species=="Pink",]
 
 # Plot: neff ===========================================================
 g.neff <- ggplot(list.neff, aes(value, fill=var)) +
@@ -174,13 +174,13 @@ g.ar
 
 g.lims <- list.mu.ratio %>% group_by(region, species) %>% summarize(upper=quantile(value, 0.99))
 
-g.ratio <- ggplot(list.mu.ratio, aes(x=region, y=exp(value), fill=var)) +
+g.ratio <- ggplot(list.mu.ratio, aes(x=region, y=(value), fill=var)) +
              scale_fill_colorblind() +
              theme_linedraw() +
              geom_violin() + 
              facet_wrap(~species) +
              # coord_flip(ylim=c(0,max(g.lims$upper)))
-             coord_flip(ylim=c(0,5))
+             coord_flip(ylim=c(-5,5))
 
 g.ratio
 
