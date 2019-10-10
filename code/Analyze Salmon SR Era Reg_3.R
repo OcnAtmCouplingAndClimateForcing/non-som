@@ -32,15 +32,15 @@ require(dplyr)
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
 # dir.output <- file.path(wd,"output")
-dir.output <- file.path(wd,"output","freeAR_2")
-dir.figs <- file.path(wd,"plots", "freeAR_2")
+dir.output <- file.path(wd,"output","freeAR_3")
+dir.figs <- file.path(wd,"plots", "freeAR_3")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-read <- FALSE #Whether to read in all model files
+read <- TRUE #Whether to read in all model files
 
 
 # MCMC Parameters
@@ -328,7 +328,7 @@ list.species <- species
 
 for(s in 1:n.species) {
   
-  g.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
+  list.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
                   ggplot(aes(x=stock, y=value, fill=region)) +
                     theme_linedraw() +
                     scale_fill_viridis_d() +
@@ -336,12 +336,12 @@ for(s in 1:n.species) {
                     geom_violin() +
                     coord_flip() +
                     facet_wrap(~species)
-  ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
-         height=7, width=8, units="in")
+  # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=list.betaRatio[[s]],
+  #        height=7, width=8, units="in")
                     
 } #next s
 # Plot combined plots
-cowplot::plot_grid(plotlist=g.betaRatio)
+cowplot::plot_grid(plotlist=list.betaRatio)
 
 
 
