@@ -11,10 +11,30 @@
 #
 #==================================================================================================
 #NOTES:
-# [1] "n.iter: 10000"
-# [1] "n.thin: 5"
-# [1] "Mon Oct  7 20:56:56 2019"
-# [1] "Mon Oct  7 23:19:21 2019"
+# Version 1:
+#   Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas) and era change (ratio) variables.
+#     Betas and ratios are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+# 
+#  Version 2:
+#    Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas), but era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+#  
+# Version 3:
+#    ADDITIVE effect of era change, SEPARATE PDO/NPGO coefficients (betas), but ADDITIVE era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+
+# TIMINGS:
+# [1] "n.iter: 1000"
+# [1] "n.thin: 2"
+# [1] "Wed Oct  9 19:23:52 2019"
+# [1] "Wed Oct  9 19:50:48 2019"
+
+# [1] "n.iter: 15000"
+# [1] "n.thin: 10"
+# [1] "Wed Oct  9 22:43:38 2019"
+# [1] "Thu Oct 10 02:28:14 2019"
 
 #==================================================================================================
 library(tidyverse)
@@ -37,8 +57,8 @@ library(bayesplot)
 # Define Workflow Paths ============================================
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
-dir.output <- file.path(wd,"output","freeAR_2")
-dir.figs <- file.path(wd,"plots","freeAR_2")
+dir.output <- file.path(wd,"output","freeAR_3")
+dir.figs <- file.path(wd,"plots","freeAR_3")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
@@ -46,12 +66,12 @@ dir.create(dir.output)
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-fit <- FALSE # Do we fit the model, or just load saved .rds outputs
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 1e4#5e4#2e4
-n.thin <- 5#25
+n.iter <- 15e3#5e4#2e4
+n.thin <- 10#25
 
 # Select Species
 species <- c("Sockeye","Pink","Chum")
@@ -188,8 +208,8 @@ for(fit.species in species) {
     #Fit the model
     stan.fit <- NULL
     if(fit==TRUE) {
-      stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker-freeAR_2.stan"),
-                       model_name="hier-Ricker-freeAR_2.stan",
+      stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker-freeAR_3.stan"),
+                       model_name="hier-Ricker-freeAR_3.stan",
                        data=list("ln_rps"=ln_rps, "spawn"=spawn,
                                  "N"=N, "maxN"=maxN,
                                  "S"=S, "R"=R,
