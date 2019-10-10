@@ -443,8 +443,13 @@ all.plt <- ggplot(reduced.data, aes(x=reorder(system, desc(system)), y=ratio/100
   ylab("Era 2 slope : Era 1 slope") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank()) +
+<<<<<<< HEAD
   geom_hline(aes(yintercept=1), color="black", size=0.5) +
   coord_flip()
+=======
+  geom_hline(aes(yintercept=1), color="black", size=1) +
+  coord_flip(ylim=c(-3,3))
+>>>>>>> 9b3f65f709728c3efade1f25cf5252079daf1d62
 
 all.plt
 
