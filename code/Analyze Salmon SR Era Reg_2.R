@@ -7,6 +7,20 @@
 #
 #==================================================================================================
 #NOTES:
+# #NOTES:
+# Version 1:
+#   Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas) and era change (ratio) variables.
+#     Betas and ratios are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+# 
+#  Version 2:
+#    Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas), but era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+#  
+# Version 3:
+#    ADDITIVE effect of era change, SEPARATE PDO/NPGO coefficients (betas), but ADDITIVE era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
 # 
 #
 #==================================================================================================
@@ -282,6 +296,8 @@ g.rhat <- ggplot(list.rhat, aes(value, fill=var)) +
             facet_wrap(~species) +
             coord_cartesian(xlim=c(1,1.1))
 g.rhat
+ggsave(file=file.path(dir.figs, paste0("Rhat.pdf")), plot=g.rhat,
+       height=4, width=5, units="in")
 
 # list.rhat[list.rhat$value>1.2 & !is.na(list.rhat$value) & !is.na(list.rhat$value),]
 
@@ -291,6 +307,8 @@ g.neff <- ggplot(list.neff, aes(value, fill=var)) +
             geom_density(alpha=0.5) +
             facet_wrap(~species)
 g.neff
+ggsave(file=file.path(dir.figs, paste0("Effective Sample Size.pdf")), plot=g.neff,
+       height=4, width=5, units="in")
 
 # Plot: autocorr ===========================================================
 # g.ar <- ggplot(list.phi, aes(value, fill=var)) +
@@ -304,7 +322,7 @@ g.neff
 g.ratio <- ggplot(list.ratio, aes(x=region, y=value, fill=var)) +
              scale_fill_viridis_d() +
              theme_linedraw() +
-             geom_hline(yintercept=0, lty=2) +
+             geom_hline(yintercept=1, lty=1, col='red') +
              geom_violin(alpha=0.5) + 
              facet_wrap(~species) +
              # coord_flip(ylim=c(0,max(g.lims$upper)))
@@ -328,20 +346,24 @@ list.species <- species
 
 for(s in 1:n.species) {
   
-  g.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
+  list.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
                   ggplot(aes(x=stock, y=value, fill=region)) +
                     theme_linedraw() +
                     scale_fill_viridis_d() +
                     geom_hline(yintercept = 0) +
                     geom_violin() +
                     coord_flip() +
-                    facet_wrap(~species)
-  ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
-         height=7, width=8, units="in")
+                    facet_wrap(~species) +
+                    ylab("Beta Ratio\n(post/pre)") +
+                    theme(legend.position = 'top', 
+                          axis.title.y = element_blank())
+
                     
 } #next s
 # Plot combined plots
-cowplot::plot_grid(plotlist=g.betaRatio)
+comb.ratio <- cowplot::plot_grid(plotlist=list.betaRatio, ncol=n.species)
+ggsave(file=file.path(dir.figs, paste0("Beta Ratio.pdf")), plot=comb.ratio,
+       height=7, width=8, units="in")
 
 
 
