@@ -358,6 +358,7 @@ npgo.env.data <- read.csv("models/npgo_environment_model_data.csv", row.names = 
 # Caterpillar Plot ===============================
 # Helper Functions
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
+q.90 <- function(x) { return(quantile(x, probs=c(0.05,0.95))) }
 q.95 <- function(x) { return(quantile(x, probs=c(0.025,0.975))) }
 
 head(npgo.env.data)
@@ -395,7 +396,7 @@ env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
 
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
   stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
-  stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
+  stat_summary(fun.y="q.90", colour="black", geom="line", lwd=1) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
   ylab("Avg. ratio: Era 2 slope / Era 1 slope") +
@@ -419,7 +420,12 @@ all.data$type <- reorder(all.data$type, all.data$type.order)
 all.data$var.type <- paste(all.data$var, all.data$type, sep=" - ")
 # all.data$log.ratio <- log(all.data$ratio/100, 10)
 
-all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio/100, fill=system)) +
+# limit to -3, 3 for plotting purposes
+
+reduced.data <- all.data %>%
+  filter(ratio >= -350, ratio <= 350)
+
+all.plt <- ggplot(reduced.data, aes(x=reorder(system, desc(system)), y=ratio/100, fill=system)) +
   theme_linedraw() +
   scale_fill_manual(values=cb[c(6,3,4,2,8)],
                     labels=c("Bering Sea", "Gulf of Alaska",
@@ -430,15 +436,15 @@ all.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio/100, fi
   # geom_eye() +
 
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
-  stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
-  stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
+  stat_summary(fun.y="q.90", colour="black", geom="line", lwd=0.5) +
+  stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
-  facet_wrap(~reorder(var.type, desc(var.type)), ncol=2) +
-  ylab("Avg ratio: Era 2 slope / Era 1 slope") +
+  facet_wrap(~reorder(var.type, desc(var.type)), ncol=2, scales="free_x") +
+  ylab("Era 2 slope : Era 1 slope") +
   theme(axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_line(size=0),
         legend.title = element_blank()) +
-  geom_hline(aes(yintercept=1), color="red", linetype="dotted", size=1) +
-  coord_flip(ylim=c(-3,3))
+  geom_hline(aes(yintercept=1), color="black", size=0.5) +
+  coord_flip()
 
 all.plt
 
