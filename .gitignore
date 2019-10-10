@@ -11,3 +11,6 @@ output/*.rds
 output/CurryTesting
 output/freeAR/*.rds
 output/freeAR_2/*.rds
+
+output/freeAR/*csv
+output/freeAR_2/*.csv
