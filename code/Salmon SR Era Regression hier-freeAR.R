@@ -42,7 +42,7 @@ dir.create(dir.output)
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-fit <- TRUE # Do we fit the model, or just load saved .rds outputs
+fit <- FALSE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
@@ -202,8 +202,11 @@ for(fit.species in species) {
       stan.fit <- readRDS(file=file.path(dir.output,paste0(file.name,".rds")))
     }
     
+    temp.plt1 <- stan_trace(stan.fit, pars="ricker_beta")
+    temp.plt2 <- plot(stan.fit, pars='beta')
+    
     # Write a .csv of Model Output =====================================
-    write.csv(summary(stan.fit)$summary, file=file.path(dir.figs, paste0(fit.species,"_summary.csv")))
+    write.csv(summary(stan.fit)$summary, file=file.path(dir.figs, paste0(fit.species, "_",var, "_summary.csv")))
     # Calculate WAIC for Model =========================================
 
 
@@ -230,7 +233,7 @@ for(fit.species in species) {
       scale_fill_colorblind() +
       geom_density(alpha=0.5)
     # g
-    ggsave(file=file.path(dir.figs,"mu_ratio hist.png"), plot=g,
+    ggsave(file=file.path(dir.figs, paste0(fit.species, "_",var,"mu_ratio hist.png")), plot=g,
            height=6, width=6, units='in')
 
     g2 <- list.mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
@@ -238,7 +241,7 @@ for(fit.species in species) {
       geom_eye(alpha=0.5) +
       coord_flip() +
       theme(legend.position = 'none')
-    ggsave(file=file.path(dir.figs,"mu_ratio geom_eye.png"), plot=g2,
+    ggsave(file=file.path(dir.figs,paste0(fit.species, "_",var,"mu_ratio geom_eye.png")), plot=g2,
              height=6, width=6, units='in')
 
 
