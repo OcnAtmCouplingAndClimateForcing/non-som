@@ -378,6 +378,7 @@ npgo.biol.data <- read.csv("models/npgo_biology_model_data.csv", row.names=1)
 # Caterpillar Plot ===============================
 # Helper Functions
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
+q.90 <- function(x) { return(quantile(x, probs=c(0.05,0.95))) }
 q.95 <- function(x) { return(quantile(x, probs=c(0.025,0.975))) }
 
 head(npgo.biol.data)
@@ -436,8 +437,7 @@ biol.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio, fill=
   # geom_eye() +
 
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
-  stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
-  stat_summary(fun.y="q.50", colour="black", geom="line", lwd=1.5) +
+  stat_summary(fun.y="q.90", colour="black", geom="line", lwd=1) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +
   ylab("Ratio: Era 1 slope / Era 2 slope (%)") +
