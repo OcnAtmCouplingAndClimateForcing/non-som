@@ -11,6 +11,20 @@
 #
 #==================================================================================================
 #NOTES:
+# Version 1:
+#   Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas) and era change (ratio) variables.
+#     Betas and ratios are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+# 
+#  Version 2:
+#    Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas), but era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+#  
+# Version 3:
+#    ADDITIVE effect of era change, SEPARATE PDO/NPGO coefficients (betas), but ADDITIVE era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+
 # [1] "n.iter: 10000"
 # [1] "n.thin: 5"
 # [1] "Mon Oct  7 20:56:56 2019"
