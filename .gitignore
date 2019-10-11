@@ -18,3 +18,6 @@ output/freeAR_3/*.csv
 plots/freeAR/*csv
 plots/freeAR_2/*.csv
 plots/freeAR_3/*.csv
+
+# MAC Folder info stuff
+*.DS_Store
