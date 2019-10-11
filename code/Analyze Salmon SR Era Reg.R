@@ -32,8 +32,8 @@ require(dplyr)
 # *Assumes you are working from the Sergent_Streamflow R project
 wd <- getwd()
 # dir.output <- file.path(wd,"output")
-dir.output <- file.path(wd,"output","freeAR_3")
-dir.figs <- file.path(wd,"plots", "freeAR_3")
+dir.output <- file.path(wd,"output","freeAR")
+dir.figs <- file.path(wd,"plots", "freeAR")
 dir.data <- file.path(wd,"data")
 dir.mods <- file.path(wd, "models")
 
@@ -66,19 +66,23 @@ list.rhat <- matrix(nrow=0, ncol=3) # Convergence diag
 list.neff <- matrix(nrow=0, ncol=3) # Effective Sample Size
 
 # By Region
-list.ratio <- matrix(nrow=0, ncol=4)
+list.mu_ratio <- matrix(nrow=0, ncol=4)
+list.sigma_ratio <- matrix(nrow=0, ncol=4)
+
+# By Stock
+list.ratio <- matrix(nrow=0, ncol=5)
 
 # By Stock
 list.phi <- matrix(nrow=0, ncol=5) # Autoregressive Coefficient
 list.beta <- matrix(nrow=0, ncol=5)
-list.beta2 <- matrix(nrow=0, ncol=5)
-list.beta_ratio <- matrix(nrow=0, ncol=5)
+# list.beta2 <- matrix(nrow=0, ncol=5)
+# list.beta_ratio <- matrix(nrow=0, ncol=5)
 
-list.both_beta <- matrix(nrow=0, ncol=6)
+# list.both_beta <- matrix(nrow=0, ncol=6)
 
 
 # Load A Sample Dataset ==========================================
-if(read==TRUE) {
+# if(read==TRUE) {
   s <- 1
   for(s in 1:n.species) {
     print(paste("s:",s,"of",n.species))
@@ -179,12 +183,23 @@ if(read==TRUE) {
       list.rhat <- rbind(list.rhat, data.frame(temp.species, temp.var, rhat))
       list.neff <- rbind(list.neff, data.frame(temp.species, temp.var, neff))
       
-      # REGION: Ratio Parameter =============================
-      temp.ratio <- data.frame(temp.pars$ratio)
-      names(temp.ratio) <- stock.regions
-      temp.ratio <- melt(temp.ratio)
-      list.ratio <- rbind(list.ratio, data.frame(temp.species, temp.var, temp.ratio))
+      # REGION: Ratio Hyperparameters ================================
+      temp.mu_ratio <- data.frame(temp.pars$mu_ratio)
+      names(temp.mu_ratio) <- stock.regions
+      temp.mu_ratio <- melt(temp.mu_ratio)
+      list.mu_ratio <- rbind(list.mu_ratio, data.frame(temp.species, temp.var, temp.mu_ratio))
       
+      temp.sigma_ratio <- data.frame(temp.pars$sigma_ratio)
+      names(temp.sigma_ratio) <- stock.regions
+      temp.sigma_ratio <- melt(temp.sigma_ratio)
+      list.sigma_ratio <- rbind(list.sigma_ratio, data.frame(temp.species, temp.var, temp.sigma_ratio))
+      
+      # STOCK: Ratio Parameter =============================
+      temp.ratio <- data.frame(temp.pars$ratio)
+      names(temp.ratio) <- stocks
+      temp.ratio <- melt(temp.ratio)
+      temp.ratio <- temp.ratio %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
+      list.ratio <- rbind(list.ratio, data.frame(temp.species, temp.var, temp.ratio))
       
       # Extract Autoregression Coeff ===========================================
       temp.phi <- data.frame(temp.pars$phi_trans)
@@ -200,11 +215,11 @@ if(read==TRUE) {
       temp.beta <- temp.beta %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
       list.beta <- rbind(list.beta, data.frame(temp.species, temp.var, temp.beta))
       
-      temp.beta2 <- data.frame(temp.pars$beta2)
-      names(temp.beta2) <- stocks
-      temp.beta2 <- melt(temp.beta2)
-      temp.beta2 <- temp.beta2 %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
-      list.beta2 <- rbind(list.beta2, data.frame(temp.species, temp.var, temp.beta2))
+      # temp.beta2 <- data.frame(temp.pars$beta2)
+      # names(temp.beta2) <- stocks
+      # temp.beta2 <- melt(temp.beta2)
+      # temp.beta2 <- temp.beta2 %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
+      # list.beta2 <- rbind(list.beta2, data.frame(temp.species, temp.var, temp.beta2))
       
       # Both Betas ==========================================
       # both_beta1 <- temp.beta
@@ -215,11 +230,11 @@ if(read==TRUE) {
       # list.both_beta <- rbind(list.both_beta, temp.both_beta)
       # 
       # Beta Ratio ===========================================
-      temp.beta_ratio <- data.frame(temp.pars$beta_ratio)
-      names(temp.beta_ratio) <- stocks
-      temp.beta_ratio <- melt(temp.beta_ratio)
-      temp.beta_ratio <- temp.beta_ratio %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
-      list.beta_ratio <- rbind(list.beta_ratio, data.frame(temp.species, temp.var, temp.beta_ratio))
+      # temp.beta_ratio <- data.frame(temp.pars$beta_ratio)
+      # names(temp.beta_ratio) <- stocks
+      # temp.beta_ratio <- melt(temp.beta_ratio)
+      # temp.beta_ratio <- temp.beta_ratio %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
+      # list.beta_ratio <- rbind(list.beta_ratio, data.frame(temp.species, temp.var, temp.beta_ratio))
       
       
       
@@ -234,8 +249,16 @@ if(read==TRUE) {
   names(list.rhat) <- c("species","var","value")
   write.csv(list.rhat, file=file.path(dir.output,"list.rhat.csv")) 
   
+  
   # REGION
-  names(list.ratio) <- c("species","var","region","value")
+  names(list.mu_ratio) <- c("species","var","region","value")
+  write.csv(list.mu_ratio, file=file.path(dir.output,"list.mu_ratio.csv")) 
+  
+  names(list.sigma_ratio) <- c("species","var","region","value")
+  write.csv(list.sigma_ratio, file=file.path(dir.output,"list.sigma_ratio.csv")) 
+  
+  # STOCK
+  names(list.ratio) <- c("species","var","stock","value","region")
   write.csv(list.ratio, file=file.path(dir.output,"list.ratio.csv")) 
   
   # STOCK
@@ -245,27 +268,24 @@ if(read==TRUE) {
   names(list.beta) <- c("species","var","stock","value","region")
   write.csv(list.beta, file=file.path(dir.output,"list.beta.csv")) 
   
-  names(list.beta2) <- c("species","var","stock","value","region")
-  write.csv(list.beta2, file=file.path(dir.output,"list.beta2.csv")) 
-  
-  names(list.beta_ratio) <- c("species","var","stock","value","region")
-  write.csv(list.beta_ratio, file=file.path(dir.output,"list.beta_ratio.csv")) 
-  
-  # names(list.mu.ratio) <- c("species","var","region","value")
-  # names(list.sigma.ratio) <- c("species","var","region","value")
+  # names(list.beta2) <- c("species","var","stock","value","region")
+  # write.csv(list.beta2, file=file.path(dir.output,"list.beta2.csv")) 
   # 
-  # write.csv(list.mu.ratio, file=file.path(dir.output,"list.mu.ratio.csv")) 
-  # write.csv(list.sigma.ratio, file=file.path(dir.output,"list.sigma.ratio.csv")) 
+  # names(list.beta_ratio) <- c("species","var","stock","value","region")
+  # write.csv(list.beta_ratio, file=file.path(dir.output,"list.beta_ratio.csv")) 
   
+
 }else {
   list.neff <- read.csv(file=file.path(dir.output,"list.neff.csv")) 
   list.rhat <- read.csv(file=file.path(dir.output,"list.rhat.csv")) 
   list.phi <- read.csv(file=file.path(dir.output,"list.phi.csv"))
   
   list.beta <- read.csv(file=file.path(dir.output,"list.beta.csv")) 
-  list.beta2 <- read.csv(file=file.path(dir.output,"list.beta2.csv")) 
+  # list.beta2 <- read.csv(file=file.path(dir.output,"list.beta2.csv")) 
   list.ratio <- read.csv(file=file.path(dir.output,"list.ratio.csv")) 
-  list.beta_ratio <- read.csv(file=file.path(dir.output,"list.beta_ratio.csv")) 
+  # list.beta_ratio <- read.csv(file=file.path(dir.output,"list.beta_ratio.csv")) 
+  list.mu_ratio <- read.csv(file=file.path(dir.output,"list.mu_ratio.csv"))
+  list.sigma_ratio <- read.csv(file=file.path(dir.output,"list.sigma_ratio.csv"))
 }
 
 
@@ -302,16 +322,16 @@ ggsave(file=file.path(dir.figs, paste0("Effective Sample Size.pdf")), plot=g.nef
 #           facet_grid(var~species)
 # g.ar
 
-# Plot: ratio ===========================================================
+# Plot: Regional Ratio ===========================================================
 
-g.ratio <- ggplot(list.ratio, aes(x=region, y=value, fill=var)) +
+g.ratio <- ggplot(list.mu_ratio, aes(x=region, y=value, fill=var)) +
   scale_fill_viridis_d() +
   theme_linedraw() +
-  geom_hline(yintercept=0, lty=2) +
+  geom_hline(yintercept=1, lty=1, col='red') +
   geom_violin(alpha=0.5) + 
   facet_wrap(~species) +
   # coord_flip(ylim=c(0,max(g.lims$upper)))
-  coord_flip() +
+  coord_flip(ylim=c(-7.5,7.5)) +
   ylab("Multiplier for Covariate Effect")
 
 g.ratio
@@ -322,34 +342,35 @@ ggsave(file=file.path(dir.figs, "Regional Ratio Param.pdf"), plot=g.ratio2,
 
 
 
-# Beta Ratio ===============================
-head(list.beta_ratio)
 
-list.betaRatio <- vector('list', length=n.species)
-
-list.species <- species
-
-for(s in 1:n.species) {
+#  Ratio ===============================
+  head(list.ratio)
   
-  list.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
-    ggplot(aes(x=stock, y=value, fill=region)) +
-    theme_linedraw() +
-    scale_fill_viridis_d() +
-    geom_hline(yintercept = 0) +
-    geom_violin() +
-    coord_flip() +
-    facet_wrap(~species) +
-    ylab("Beta Ratio\n(post/pre)") +
-    theme(legend.position = 'top', 
-          axis.title.y = element_blank())
-  # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
-  #        height=7, width=8, units="in")
+  list.betaRatio <- vector('list', length=n.species)
   
-} #next s
-# Plot combined plots
-comb.ratio <- cowplot::plot_grid(plotlist=list.betaRatio, ncol=n.species)
-ggsave(file=file.path(dir.figs, paste0("Beta Ratio.pdf")), plot=comb.ratio,
-       height=7, width=8, units="in")
+  list.species <- species
+  
+  for(s in 1:n.species) {
+    
+    list.betaRatio[[s]] <- list.ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
+      ggplot(aes(x=stock, y=value, fill=region)) +
+      theme_linedraw() +
+      scale_fill_viridis_d() +
+      geom_hline(yintercept = 0) +
+      geom_violin() +
+      coord_flip(ylim=c(-3,3)) +
+      facet_wrap(~species) +
+      ylab("Beta Ratio\n(post/pre)") +
+      theme(legend.position = 'top', 
+            axis.title.y = element_blank())
+    # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
+    #        height=7, width=8, units="in")
+    
+  } #next s
+  # Plot combined plots
+  comb.ratio <- cowplot::plot_grid(plotlist=list.betaRatio, ncol=n.species)
+  ggsave(file=file.path(dir.figs, paste0("Beta Ratio.pdf")), plot=comb.ratio,
+         height=7, width=10, units="in")
 
 
 
