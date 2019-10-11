@@ -283,8 +283,7 @@ g.rhat <- ggplot(list.rhat, aes(value, fill=var)) +
             coord_cartesian(xlim=c(1,1.1))
 g.rhat
 
-ggsave(file=file.path(dir.figs, paste0("Rhat.pdf")), plot=g.rhat,
-       height=4, width=5, units="in")
+# list.rhat[list.rhat$value>1.2 & !is.na(list.rhat$value) & !is.na(list.rhat$value),]
 
 # Plot: neff ===========================================================
 g.neff <- ggplot(list.neff, aes(value, fill=var)) +
@@ -292,8 +291,6 @@ g.neff <- ggplot(list.neff, aes(value, fill=var)) +
             geom_density(alpha=0.5) +
             facet_wrap(~species)
 g.neff
-ggsave(file=file.path(dir.figs, paste0("Effective Sample Size.pdf")), plot=g.neff,
-       height=4, width=5, units="in")
 
 # Plot: autocorr ===========================================================
 # g.ar <- ggplot(list.phi, aes(value, fill=var)) +
@@ -332,25 +329,19 @@ list.species <- species
 for(s in 1:n.species) {
   
   list.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
-    ggplot(aes(x=stock, y=value, fill=region)) +
-    theme_linedraw() +
-    scale_fill_viridis_d() +
-    geom_hline(yintercept = 0) +
-    geom_violin() +
-    coord_flip() +
-    facet_wrap(~species) +
-    ylab("Beta Ratio\n(post/pre)") +
-    theme(legend.position = 'top', 
-          axis.title.y = element_blank())
-  # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
+                  ggplot(aes(x=stock, y=value, fill=region)) +
+                    theme_linedraw() +
+                    scale_fill_viridis_d() +
+                    geom_hline(yintercept = 0) +
+                    geom_violin() +
+                    coord_flip() +
+                    facet_wrap(~species)
+  # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=list.betaRatio[[s]],
   #        height=7, width=8, units="in")
-  
+                    
 } #next s
 # Plot combined plots
-comb.ratio <- cowplot::plot_grid(plotlist=list.betaRatio, ncol=n.species)
-ggsave(file=file.path(dir.figs, paste0("Beta Ratio.pdf")), plot=comb.ratio,
-       height=7, width=8, units="in")
-
+cowplot::plot_grid(plotlist=list.betaRatio)
 
 
 
