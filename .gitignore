@@ -15,9 +15,11 @@ output/freeAR_3/*.rds
 output/freeAR/*csv
 output/freeAR_2/*.csv
 output/freeAR_3/*.csv
+output/freeAR_4/*.csv
+
 plots/freeAR/*csv
 plots/freeAR_2/*.csv
 plots/freeAR_3/*.csv
-
+plots/freeAR_4/*.csv
 # MAC Folder info stuff
 *.DS_Store
