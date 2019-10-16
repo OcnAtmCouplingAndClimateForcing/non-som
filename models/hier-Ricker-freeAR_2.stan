@@ -99,7 +99,7 @@ transformed parameters {
 
 model {
   //Priors
-  phi ~ normal(0,sqrt(10)); //uniform(-0.99,0.99); //Autoregressive term for errors
+  phi ~ normal(0,2); //uniform(-0.99,0.99); //Autoregressive term for errors
 
   // Ricker alpha hyperparameters
   ricker_mu_alpha ~ normal(0,5);
@@ -108,8 +108,8 @@ model {
   for(s in 1:S) { // Stocks
     ricker_alpha[s] ~ normal(ricker_mu_alpha,ricker_sigma_alpha);
     ricker_beta[s] ~ normal(0,0.001);
-    sigma_resid[s] ~ normal(0,5);//cauchy(0,5);
-    init_residual[s] ~ normal(0,sqrt(10));//normal(0,(sigma_oe[s]/(1-phi^2))); // normal(0,10); //Initial residual
+    sigma_resid[s] ~ normal(0,1);//cauchy(0,5);
+    init_residual[s] ~ normal(0,5);//normal(0,(sigma_oe[s]/(1-phi^2))); // normal(0,10); //Initial residual
 
     //Coefficients
     beta[s] ~ normal(mu_beta[region[s]], sigma_beta[region[s]]);
