@@ -31,10 +31,15 @@
 #    NEITHER betas nor ratios are structured hierarchically. Difference from V3 - Removed hierarchical structure
 
 # TIMINGS =====================================
-# [1] "n.iter: 40000"
+# [1] "n.iter: 10000"
+# [1] "n.thin: 5"
+# [1] "Wed Oct 16 10:55:02 2019"
+# [1] "Wed Oct 16 11:46:29 2019"
+
+# [1] "n.iter: 50000"
 # [1] "n.thin: 15"
-# [1] "Tue Oct 15 21:21:27 2019"
-# [1] "Wed Oct 16 07:02:44 2019"
+# [1] "Wed Oct 16 20:46:58 2019"
+# [1] "Wed Oct 16 23:47:42 2019"
 
 #==================================================================================================
 library(tidyverse)
@@ -66,13 +71,13 @@ dir.create(dir.output)
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-fit <- FALSE # Do we fit the model, or just load saved .rds outputs
+fit <- TRUE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 4e4#5e4#2e4
-n.thin <- 15#25
-n.samples <- (n.iter/n.thin)*0.5*n.chains
+n.iter <- 5e4#4e4
+n.thin <- 15#15
+(n.iter/n.thin)*0.5*n.chains
 
 # Select Species
 species <- c("Sockeye","Pink","Chum")
@@ -209,8 +214,8 @@ for(fit.species in species) {
     #Fit the model
     stan.fit <- NULL
     if(fit==TRUE) {
-      stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker-freeAR_2.stan"),
-                       model_name="hier-Ricker-freeAR_2.stan",
+      stan.fit <- stan(file=file.path(dir.mods,"hier-Ricker-freeAR_4.stan"),
+                       model_name="hier-Ricker-freeAR_4.stan",
                        data=list("ln_rps"=ln_rps, "spawn"=spawn,
                                  "N"=N, "maxN"=maxN,
                                  "S"=S, "R"=R,
