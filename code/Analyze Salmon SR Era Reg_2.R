@@ -40,7 +40,7 @@ dir.mods <- file.path(wd, "models")
 dir.create(dir.figs)
 
 # CONTROL ==========================================================
-read <- TRUE #Whether to read in all model files
+read <- FALSE #Whether to read in all model files
 
 
 # MCMC Parameters
@@ -221,7 +221,17 @@ for(s in 1:n.species) {
     temp.beta_ratio <- temp.beta_ratio %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
     list.beta_ratio <- rbind(list.beta_ratio, data.frame(temp.species, temp.var, temp.beta_ratio))
     
-    
+    # Traceplots =========================================
+    pdf(file.path(dir.figs, paste0("Traceplot ", temp.species,"_",temp.var,".pdf")), height=10, width=12)
+    plot(rstan::traceplot(temp.fit, pars="mu_beta"))
+    plot(rstan::traceplot(temp.fit, pars="sigma_beta"))
+    plot(rstan::traceplot(temp.fit, pars="beta"))
+    plot(rstan::traceplot(temp.fit, pars="ratio"))
+    plot(rstan::traceplot(temp.fit, pars="ricker_alpha"))
+    plot(rstan::traceplot(temp.fit, pars="ricker_beta"))
+    plot(rstan::traceplot(temp.fit, pars="sigma_resid"))
+    plot(rstan::traceplot(temp.fit, pars="phi"))
+    dev.off()
     
   }
 }
@@ -284,7 +294,7 @@ g.rhat <- ggplot(list.rhat, aes(value, fill=var)) +
 g.rhat
 
 ggsave(file=file.path(dir.figs, paste0("Rhat.pdf")), plot=g.rhat,
-       height=4, width=5, units="in")
+       height=4, width=7, units="in")
 
 # Plot: neff ===========================================================
 g.neff <- ggplot(list.neff, aes(value, fill=var)) +
@@ -293,7 +303,7 @@ g.neff <- ggplot(list.neff, aes(value, fill=var)) +
   facet_wrap(~species)
 g.neff
 ggsave(file=file.path(dir.figs, paste0("Effective Sample Size.pdf")), plot=g.neff,
-       height=4, width=5, units="in")
+       height=4, width=7, units="in")
 
 # Plot: autocorr ===========================================================
 # g.ar <- ggplot(list.phi, aes(value, fill=var)) +
