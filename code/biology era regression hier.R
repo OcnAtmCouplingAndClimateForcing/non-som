@@ -14,7 +14,7 @@ library(tidybayes)
 library(bayesplot)
 
 # download PDO / NPGO and process
-download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
+# download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
 names <- read.table("~pdo", skip=30, nrows=1, as.is = T)
 pdo <- read.table("~pdo", skip=32, nrows=119, fill=T, col.names = names)
 pdo$YEAR <- 1900:(1899+nrow(pdo)) # drop asterisks!
@@ -22,7 +22,7 @@ pdo <- pdo %>%
   gather(month, value, -YEAR) %>%
   arrange(YEAR)
 
-download.file("http://www.oces.us/npgo/npgo.php", "~npgo")
+# download.file("http://www.oces.us/npgo/npgo.php", "~npgo")
 
 npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "month", "value"))
 
@@ -278,9 +278,9 @@ model.data$system <- reorder(model.data$system, model.data$order)
 pdo.biol.data <- model.data
 
 # save for future reference
-write.csv(pdo.biol.data, "models/pdo_biology_model_data.csv")
+write.csv(pdo.biol.data, "output/pdo_biology_model_data.csv")
 
-pdo.biol.data <- read.csv("models/pdo_biology_model_data.csv", row.names=1)
+pdo.biol.data <- read.csv("output/pdo_biology_model_data.csv", row.names=1)
 
 #################
 ## and the same thing for npgo
@@ -367,14 +367,20 @@ for(s in levels.syst) {
 }
 
 
+# order the systems north-south
+model.data$order <- ifelse(model.data$system=="Bering Sea", 1,
+                           ifelse(model.data$system=="Gulf of Alaska", 2,
+                                  ifelse(model.data$system=="Northern California Current", 3,
+                                         ifelse(model.data$system=="Central California Current", 4, 5))))
+
 model.data$system <- reorder(model.data$system, model.data$order)
 
 npgo.biol.data <- model.data
 
 # save for future reference
-write.csv(npgo.biol.data, "models/npgo_biology_model_data.csv")
+write.csv(npgo.biol.data, "output/npgo_biology_model_data.csv")
 
-npgo.biol.data <- read.csv("models/npgo_biology_model_data.csv", row.names=1)
+npgo.biol.data <- read.csv("output/npgo_biology_model_data.csv", row.names=1)
 # Caterpillar Plot ===============================
 # Helper Functions
 q.50 <- function(x) { return(quantile(x, probs=c(0.25,0.75))) }
