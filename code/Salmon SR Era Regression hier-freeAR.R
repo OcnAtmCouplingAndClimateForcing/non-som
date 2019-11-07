@@ -221,28 +221,28 @@ for(fit.species in species) {
     # Plot Output ======================================================
     # Someone can continue here.
 
-    pars <- extract(stan.fit)
-
-    mu_ratios <- data.frame(pars$mu_ratio)
-    names(mu_ratios) <- regions
-    # exp_mu_ratios <- exp(mu_ratios)
-
-    list.mu_ratios <- melt(mu_ratios)
-
-    g <- list.mu_ratios %>% ggplot(aes(value, fill=variable)) +
-      scale_fill_colorblind() +
-      geom_density(alpha=0.5)
-    # g
-    ggsave(file=file.path(dir.figs, paste0(fit.species, "_",var,"mu_ratio hist.png")), plot=g,
-           height=6, width=6, units='in')
-
-    g2 <- list.mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
-      scale_fill_colorblind() +
-      geom_eye(alpha=0.5) +
-      coord_flip() +
-      theme(legend.position = 'none')
-    ggsave(file=file.path(dir.figs,paste0(fit.species, "_",var,"mu_ratio geom_eye.png")), plot=g2,
-             height=6, width=6, units='in')
+    # pars <- extract(stan.fit)
+    # 
+    # mu_ratios <- data.frame(pars$mu_ratio)
+    # names(mu_ratios) <- regions
+    # # exp_mu_ratios <- exp(mu_ratios)
+    # 
+    # list.mu_ratios <- melt(mu_ratios)
+    # 
+    # g <- list.mu_ratios %>% ggplot(aes(value, fill=variable)) +
+    #   scale_fill_colorblind() +
+    #   geom_density(alpha=0.5)
+    # # g
+    # ggsave(file=file.path(dir.figs, paste0(fit.species, "_",var,"mu_ratio hist.png")), plot=g,
+    #        height=6, width=6, units='in')
+    # 
+    # g2 <- list.mu_ratios %>% ggplot(aes(x=variable, y=value, fill=variable)) +
+    #   scale_fill_colorblind() +
+    #   geom_eye(alpha=0.5) +
+    #   coord_flip() +
+    #   theme(legend.position = 'none')
+    # ggsave(file=file.path(dir.figs,paste0(fit.species, "_",var,"mu_ratio geom_eye.png")), plot=g2,
+    #          height=6, width=6, units='in')
 
 
     # END LOOP ========================================================

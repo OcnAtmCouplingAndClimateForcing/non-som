@@ -13,7 +13,7 @@ library(bayesplot)
 library(ggthemes)
 
 # load pdo/npgo
-download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
+# download.file("http://jisao.washington.edu/pdo/PDO.latest", "~pdo")
 names <- read.table("~pdo", skip=30, nrows=1, as.is = T)
 pdo <- read.table("~pdo", skip=32, nrows=119, fill=T, col.names = names)
 pdo$YEAR <- 1900:(1899+nrow(pdo)) # drop asterisks!
@@ -21,7 +21,7 @@ pdo <- pdo %>%
   gather(month, value, -YEAR) %>%
   arrange(YEAR)
 
-download.file("http://www.oces.us/npgo/npgo.php", "~npgo")
+# download.file("http://www.oces.us/npgo/npgo.php", "~npgo")
 
 npgo <- read.table("~npgo", skip=10, nrows=828, fill=T, col.names = c("Year", "month", "value"))
 
@@ -244,9 +244,9 @@ model.data$system <- reorder(model.data$system, model.data$order)
 pdo.env.data <- model.data
 
 # save for future reference
-write.csv(pdo.env.data, "models/pdo_environment_model_data.csv")
+write.csv(pdo.env.data, "output/pdo_environment_model_data.csv")
 
-pdo.env.data <- read.csv("models/pdo_environment_model_data.csv", row.names = 1)
+pdo.env.data <- read.csv("output/pdo_environment_model_data.csv", row.names = 1)
 
 #################
 ## and the same thing for npgo
@@ -351,9 +351,9 @@ model.data$system <- reorder(model.data$system, model.data$order)
 npgo.env.data <- model.data
 
 # save for future reference
-write.csv(npgo.env.data, "models/npgo_environment_model_data.csv")
+write.csv(npgo.env.data, "output/npgo_environment_model_data.csv")
 
-npgo.env.data <- read.csv("models/npgo_environment_model_data.csv", row.names = 1)
+npgo.env.data <- read.csv("output/npgo_environment_model_data.csv", row.names = 1)
 
 # Caterpillar Plot ===============================
 # Helper Functions
@@ -384,7 +384,8 @@ all.data$system <- reorder(all.data$system, all.data$order)
 # colorblind...
 cb <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
-env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fill=system)) +
+
+env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=ratio/100, fill=system)) +
   theme_linedraw() +
   scale_fill_manual(values=cb[c(6,3,4,2,8)],
                     labels=c("Bering Sea", "Gulf of Alaska",
@@ -395,7 +396,7 @@ env.plt <- ggplot(all.data, aes(x=reorder(system, desc(system)), y=log.ratio, fi
   # geom_eye() +
 
   geom_violin(alpha = 0.75, lwd=0.1, scale='width') +
-  stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
+  # stat_summary(fun.y="q.95", colour="black", geom="line", lwd=0.75) +
   stat_summary(fun.y="q.90", colour="black", geom="line", lwd=1) +
   stat_summary(fun.y="median", colour="black", size=2, geom="point", pch=21) +
   facet_wrap(~var, ncol=1) +

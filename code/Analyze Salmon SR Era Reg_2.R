@@ -221,7 +221,17 @@ for(s in 1:n.species) {
     temp.beta_ratio <- temp.beta_ratio %>% left_join(lookup.stock.region, by=c("variable"="stocks"))
     list.beta_ratio <- rbind(list.beta_ratio, data.frame(temp.species, temp.var, temp.beta_ratio))
     
-    
+    # Traceplots =========================================
+    pdf(file.path(dir.figs, paste0("Traceplot ", temp.species,"_",temp.var,".pdf")), height=10, width=12)
+    plot(rstan::traceplot(temp.fit, pars="mu_beta"))
+    plot(rstan::traceplot(temp.fit, pars="sigma_beta"))
+    plot(rstan::traceplot(temp.fit, pars="beta"))
+    plot(rstan::traceplot(temp.fit, pars="ratio"))
+    plot(rstan::traceplot(temp.fit, pars="ricker_alpha"))
+    plot(rstan::traceplot(temp.fit, pars="ricker_beta"))
+    plot(rstan::traceplot(temp.fit, pars="sigma_resid"))
+    plot(rstan::traceplot(temp.fit, pars="phi"))
+    dev.off()
     
   }
 }
@@ -277,20 +287,23 @@ write.csv(list.beta_ratio, file=file.path(dir.output,"list.beta_ratio.csv"))
   
 # Plot: rhat ===========================================================
 g.rhat <- ggplot(list.rhat, aes(value, fill=var)) +
-            theme_linedraw() + 
-            geom_density(alpha=0.5) +
-            facet_wrap(~species) +
-            coord_cartesian(xlim=c(1,1.1))
+  theme_linedraw() + 
+  geom_density(alpha=0.5) +
+  facet_wrap(~species) +
+  coord_cartesian(xlim=c(1,1.1))
 g.rhat
 
-# list.rhat[list.rhat$value>1.2 & !is.na(list.rhat$value) & !is.na(list.rhat$value),]
+ggsave(file=file.path(dir.figs, paste0("Rhat.pdf")), plot=g.rhat,
+       height=4, width=7, units="in")
 
 # Plot: neff ===========================================================
 g.neff <- ggplot(list.neff, aes(value, fill=var)) +
-            theme_linedraw() + 
-            geom_density(alpha=0.5) +
-            facet_wrap(~species)
+  theme_linedraw() + 
+  geom_density(alpha=0.5) +
+  facet_wrap(~species)
 g.neff
+ggsave(file=file.path(dir.figs, paste0("Effective Sample Size.pdf")), plot=g.neff,
+       height=4, width=7, units="in")
 
 # Plot: autocorr ===========================================================
 # g.ar <- ggplot(list.phi, aes(value, fill=var)) +
@@ -304,7 +317,7 @@ g.neff
 g.ratio <- ggplot(list.ratio, aes(x=region, y=value, fill=var)) +
              scale_fill_viridis_d() +
              theme_linedraw() +
-             geom_hline(yintercept=0, lty=2) +
+             geom_hline(yintercept=1, lty=1, col='red') +
              geom_violin(alpha=0.5) + 
              facet_wrap(~species) +
              # coord_flip(ylim=c(0,max(g.lims$upper)))
@@ -328,20 +341,22 @@ list.species <- species
 
 for(s in 1:n.species) {
   
-  g.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
-                  ggplot(aes(x=stock, y=value, fill=region)) +
-                    theme_linedraw() +
-                    scale_fill_viridis_d() +
-                    geom_hline(yintercept = 0) +
-                    geom_violin() +
-                    coord_flip() +
-                    facet_wrap(~species)
-  ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=g.betaRatio[[s]],
-         height=7, width=8, units="in")
-                    
+  list.betaRatio[[s]] <- list.beta_ratio %>% filter(species==list.species[s]) %>% arrange(region) %>% 
+    ggplot(aes(x=stock, y=value, fill=region)) +
+    theme_linedraw() +
+    scale_fill_viridis_d() +
+    geom_hline(yintercept = 0) +
+    geom_violin() +
+    coord_flip() +
+    facet_wrap(~species)
+  # ggsave(file=file.path(dir.figs, paste0(".pdf")), plot=list.betaRatio[[s]],
+  #        height=7, width=8, units="in")
+  
 } #next s
 # Plot combined plots
-cowplot::plot_grid(plotlist=g.betaRatio)
+comb.ratio <- cowplot::plot_grid(plotlist=list.betaRatio, ncol=n.species)
+ggsave(file=file.path(dir.figs, paste0("Beta Ratio.pdf")), plot=comb.ratio,
+       height=7, width=10, units="in")
 
 
 

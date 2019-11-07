@@ -11,10 +11,29 @@
 #
 #==================================================================================================
 #NOTES:
+# Version 1:
+#   Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas) and era change (ratio) variables.
+#     Betas and ratios are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+# 
+#  Version 2:
+#    Multiplicative effect of era change, SEPARATE PDO/NPGO coefficients (betas), but era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+#  
+# Version 3:
+#    ADDITIVE effect of era change, SEPARATE PDO/NPGO coefficients (betas), but ADDITIVE era change (ratio) variables
+#      are common within regions.
+#    Betas (NOT ratios) are structured hierarchically, with normal prior the mean and sd of which is region-specific.
+
 # [1] "n.iter: 10000"
 # [1] "n.thin: 5"
 # [1] "Mon Oct  7 20:56:56 2019"
 # [1] "Mon Oct  7 23:19:21 2019"
+
+# [1] "n.iter: 25000"
+# [1] "n.thin: 10"
+# [1] "Mon Oct 14 18:58:13 2019"
+# [1] "Tue Oct 15 00:15:30 2019"
 
 #==================================================================================================
 library(tidyverse)
@@ -50,8 +69,9 @@ fit <- FALSE # Do we fit the model, or just load saved .rds outputs
 
 # MCMC Parameters
 n.chains <- 3
-n.iter <- 1e4#5e4#2e4
-n.thin <- 5#25
+n.iter <- 2.5e4#5e4#2e4
+n.thin <- 10#25
+n.samples <- (n.iter/n.thin)*0.5*n.chains
 
 # Select Species
 species <- c("Sockeye","Pink","Chum")
