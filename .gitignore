@@ -28,6 +28,6 @@ plots/freeAR_2/*.csv
 plots/freeAR_3/*.csv
 plots/freeAR_4/*.csv
 plots/freeAR_5/*.csv
-plots/freeAR_6/*.csv
+#plots/freeAR_6/*.csv
 # MAC Folder info stuff
 *.DS_Store
