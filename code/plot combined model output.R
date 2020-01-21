@@ -2,7 +2,7 @@ library(tidyverse)
 library(ggpubr)
 
 # load salmon results
-salmon.ratio <- read.csv("/Users/MikeLitzow 1/Documents/R/FATE2/extra output objects/list.ratio.csv", row.names = 1) 
+salmon.ratio <- read.csv("output/freeAR_6/list.ratio.csv", row.names = 1) 
 
 # rename covariates!
 salmon.ratio$var <- ifelse(salmon.ratio$var=="pdo2a", "PDO - salmon", "NPGO - salmon")
@@ -166,7 +166,7 @@ biol.plt <- ggplot(biol.data, aes(x=reorder(system, desc(system)), y=ratio/100, 
 # now combine all three
 # make a blank plot as a placeholder
 
-null.plot <- ggplot()
+null.plot <- ggplot() + theme_void()
 
 png("plots/combined environment salmon other biology bayesian results plot.png",
     8, 8, units="in", res=300)
@@ -212,5 +212,11 @@ salm.table <- salmon.ratio %>%
 
 salm.table$group <- ifelse(salm.table$species == "Pink", "Pink salmon",
                            ifelse(salm.table$species == "Sockeye", "Sockeye salmon", "Chum salmon"))
+salm.table <- salm.table %>%
+  select(-species)
 
-salm.table$var <- ifelse(salm.table$var == "PDO - other biology", "PDO", "NPGO")
+salm.table$var <- ifelse(salm.table$var == "PDO - salmon", "PDO", "NPGO")
+
+SI.table <- rbind(env.table, salm.table, biol.table)
+
+write.csv(SI.table, "output/SI posterior distributions table.csv", row.names = F)
